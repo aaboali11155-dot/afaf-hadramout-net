@@ -27,34 +27,136 @@ footer{background:#153d31;color:#dce9e3;padding:30px 6%;display:flex;justify-con
 <div><div class="logo">عفاف حضرموت نت</div><div class="sub">منصة الزواج الخيري في حضرموت</div></div>
 <nav><button class="btn light" onclick="login()">تسجيل الدخول</button><button class="btn green" onclick="register()">إنشاء حساب</button></nav>
 </header>
+
 <section class="hero">
 <div><span class="badge">مشروع خيري • مجاني للمستخدمين</span><h1>نسعى لمساعدة الشباب والفتيات على الزواج الحلال</h1>
 <p>منصة محترمة وآمنة للتعارف بهدف الزواج، مع الحفاظ على الخصوصية وبدون رسوم على المستخدمين.</p>
 <button class="btn green" onclick="register()">ابدأ التسجيل</button></div>
 <div class="hero-card"><div class="heart">♡</div><h3>عفاف • ثقة • خصوصية</h3><p>حسابات تتم مراجعتها، وطلبات تواصل تحافظ على خصوصية المستخدمين.</p></div>
 </section>
+
 <section class="choices">
 <button class="choice" onclick="register()"><span>👨</span><h3>قسم الشباب</h3><p>أنشئ ملفك وابحث عن شريكة مناسبة.</p></button>
 <button class="choice" onclick="register()"><span>👩</span><h3>قسم البنات</h3><p>أنشئي ملفك وابحثي عن شريك مناسب.</p></button>
 </section>
+
 <section class="how"><h2>كيف يعمل الموقع؟</h2><div class="grid">
 <div class="box"><b>١. إنشاء الحساب</b><p>تسجيل مجاني واختيار نوع الحساب.</p></div>
 <div class="box"><b>٢. الملف الشخصي</b><p>أضف بياناتك ومواصفات شريك الحياة.</p></div>
 <div class="box"><b>٣. البحث</b><p>ابحث عن الملفات المناسبة واحفظها.</p></div>
 <div class="box"><b>٤. التواصل</b><p>أرسل طلب تواصل باحترام وخصوصية.</p></div>
 </div></section>
+
 <section class="features"><h2>مميزات عفاف حضرموت نت</h2><div class="grid">
 <div class="box">🔒 <b>خصوصية</b><p>لا نعرض رقم الجوال أو البريد للعامة.</p></div>
 <div class="box">🛡️ <b>مراجعة</b><p>إدارة الحسابات والبلاغات.</p></div>
 <div class="box">👁️ <b>زوار الملف</b><p>ميزة مجانية للمستخدمين.</p></div>
 <div class="box">❤️ <b>خيري ومجاني</b><p>لا نضع الميزات الأساسية خلف الدفع.</p></div>
 </div></section>
+
 <footer><strong>عفاف حضرموت نت</strong><span>منصة الزواج الخيري في حضرموت</span><span>الخصوصية • الشروط • الإبلاغ</span></footer>
-<div class="modal" id="modal" onclick="if(event.target===this)closeModal()"><div class="modalbox"><button class="close" onclick="closeModal()">×</button><div id="content"></div></div></div>
+
+<div class="modal" id="modal" onclick="if(event.target===this)closeModal()">
+<div class="modalbox"><button class="close" onclick="closeModal()">×</button><div id="content"></div></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-const modal=document.getElementById('modal'),content=document.getElementById('content');
-function register(){content.innerHTML='<h2>إنشاء حساب</h2><form class="form"><label>نوع الحساب</label><select required><option value="">اختر</option><option>شاب</option><option>بنت</option></select><label>البريد الإلكتروني</label><input type="email" required><label>كلمة المرور</label><input type="password" minlength="8" required><button class="btn green">إنشاء الحساب</button></form>';modal.classList.add('show')}
-function login(){content.innerHTML='<h2>تسجيل الدخول</h2><form class="form"><label>البريد الإلكتروني</label><input type="email" required><label>كلمة المرور</label><input type="password" required><button class="btn green">دخول</button></form>';modal.classList.add('show')}
-function closeModal(){modal.classList.remove('show')}
+const SUPABASE_URL = "https://zftdssfqavdlsnulpheq.supabase.co";
+const SUPABASE_KEY = "sb_publishable_Sdgd2lds7bi-I3rDJA1GrQ_rqNmOk5L";
+
+const supabaseClient = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
+
+const modal = document.getElementById("modal");
+const content = document.getElementById("content");
+
+function register(){
+  content.innerHTML = `
+    <h2>إنشاء حساب</h2>
+    <form class="form" onsubmit="createAccount(event)">
+      <label>نوع الحساب</label>
+      <select id="gender" required>
+        <option value="">اختر</option>
+        <option value="شاب">شاب</option>
+        <option value="بنت">بنت</option>
+      </select>
+      <label>البريد الإلكتروني</label>
+      <input id="email" type="email" required>
+      <label>كلمة المرور</label>
+      <input id="password" type="password" minlength="8" required>
+      <button class="btn green" type="submit">إنشاء الحساب</button>
+      <p id="registerMessage"></p>
+    </form>`;
+  modal.classList.add("show");
+}
+
+async function createAccount(event){
+  event.preventDefault();
+
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value;
+  const gender = document.getElementById("gender").value;
+  const message = document.getElementById("registerMessage");
+
+  message.textContent = "جاري إنشاء الحساب...";
+
+  const { error } = await supabaseClient.auth.signUp({
+    email,
+    password,
+    options:{data:{الجنس:gender}}
+  });
+
+  if(error){
+    message.textContent = "حدث خطأ: " + error.message;
+    return;
+  }
+
+  message.textContent =
+    "تم إنشاء الحساب بنجاح. تحقق من بريدك الإلكتروني لتأكيد الحساب.";
+}
+
+function login(){
+  content.innerHTML = `
+    <h2>تسجيل الدخول</h2>
+    <form class="form" onsubmit="loginAccount(event)">
+      <label>البريد الإلكتروني</label>
+      <input id="loginEmail" type="email" required>
+      <label>كلمة المرور</label>
+      <input id="loginPassword" type="password" required>
+      <button class="btn green" type="submit">دخول</button>
+      <p id="loginMessage"></p>
+    </form>`;
+  modal.classList.add("show");
+}
+
+async function loginAccount(event){
+  event.preventDefault();
+
+  const email = document.getElementById("loginEmail").value.trim();
+  const password = document.getElementById("loginPassword").value;
+  const message = document.getElementById("loginMessage");
+
+  message.textContent = "جاري تسجيل الدخول...";
+
+  const { error } = await supabaseClient.auth.signInWithPassword({
+    email,
+    password
+  });
+
+  if(error){
+    message.textContent = "خطأ: " + error.message;
+    return;
+  }
+
+  message.textContent = "تم تسجيل الدخول بنجاح.";
+}
+
+function closeModal(){
+  modal.classList.remove("show");
+}
 </script>
-</body></html>
+</body>
+</html>
