@@ -192,7 +192,7 @@ const message=document.getElementById("registerMessage");
 
 message.textContent="جاري إنشاء الحساب...";
 
-const {error}=await supabaseClient.auth.signUp({
+const {data,error}=await supabaseClient.auth.signUp({
 email,
 password,
 options:{
@@ -208,8 +208,12 @@ message.textContent="حدث خطأ: "+error.message;
 return;
 }
 
+if(data.user){
 message.innerHTML=
 "تم إنشاء الحساب بنجاح. تحقق من بريدك الإلكتروني، ثم سجل الدخول لإكمال ملفك.";
+}else{
+message.textContent="تم إنشاء الحساب. تحقق من بريدك الإلكتروني.";
+}
 }
 
 function login(){
@@ -276,7 +280,7 @@ const {data,error}=await supabaseClient
 .from("profiles")
 .select("*")
 .eq("user_id",user.id)
-.single();
+.maybeSingle();
 
 if(error){
 content.innerHTML="<p>تعذر تحميل الملف الشخصي: "+error.message+"</p>";
@@ -284,50 +288,178 @@ modal.classList.add("show");
 return;
 }
 
+const profileData=data||{};
+
 content.innerHTML=`
 <h2 class="profile-title">ملفي الشخصي</h2>
 
 <form class="form" onsubmit="saveProfile(event)">
 
 <label>الاسم</label>
-<input id="name" value="${safe(data["الاسم"])}" required>
+<input id="name" value="${safe(profileData["الاسم"])}" required>
 
 <label>العمر</label>
-<input id="age" type="number" min="18" max="100" value="${data["العمر"]||""}" required>
+<input id="age" type="number" min="18" max="100" value="${profileData["العمر"]||""}" required>
 
 <label>الجنس</label>
 <select id="profileGender" required>
-<option value="شاب" ${data["الجنس"]==="شاب"?"selected":""}>شاب</option>
-<option value="بنت" ${data["الجنس"]==="بنت"?"selected":""}>بنت</option>
+<option value="شاب" ${profileData["الجنس"]==="شاب"?"selected":""}>شاب</option>
+<option value="بنت" ${profileData["الجنس"]==="بنت"?"selected":""}>بنت</option>
 </select>
 
 <label>لون البشرة</label>
-<input id="skin" value="${safe(data["لون البشرة"])}">
+<input id="skin" value="${safe(profileData["لون البشرة"])}">
 
 <label>قبلي أو حضري</label>
 <select id="tribal">
 <option value="">اختر</option>
-<option value="قبلي" ${data["قبلي_او_حضري"]==="قبلي"?"selected":""}>قبلي</option>
-<option value="حضري" ${data["قبلي_او_حضري"]==="حضري"?"selected":""}>حضري</option>
+<option value="قبلي" ${profileData["قبلي_او_حضري"]==="قبلي"?"selected":""}>قبلي</option>
+<option value="حضري" ${profileData["قبلي_او_حضري"]==="حضري"?"selected":""}>حضري</option>
 </select>
 
 <label>الحالة الاجتماعية</label>
-<input id="marital" value="${safe(data["الحالة_الاجتماعية"])}">
+<input id="marital" value="${safe(profileData["الحالة_الاجتماعية"])}">
 
 <label>الطول</label>
-<input id="height" type="number" step="0.1" value="${data["الطول"]||""}">
+<input id="height" type="number" step="0.1" value="${profileData["الطول"]||""}">
 
 <label>المؤهل الدراسي</label>
-<input id="education" value="${safe(data["المؤهل_الدراسي"])}">
+<input id="education" value="${safe(profileData["المؤهل_الدراسي"])}">
 
 <label>الوظيفة</label>
-<input id="job" value="${safe(data["الوظيفة"])}">
+<input id="job" value="${safe(profileData["الوظيفة"])}">
 
 <label>المدينة</label>
-<input id="city" value="${safe(data["المدينة"])}">
+<input id="city" value="${safe(profileData["المدينة"])}">
 
 <label>الحالة الصحية</label>
-<input id="health" value="${safe(data["الحالة_الصحية"])}">
+<input id="health" value="${safe(profileData["الحالة_الصحية"])}">
+
+<label>الحالة المادية</label>
+<input id="financial" value="${safe(profileData["الحالة_المادية"])}">
+
+<label>نبذة عن نفسك</label>
+<textarea id="bio">${safe(profileData["نبذة_عن_نفسه"])}</textarea>
+
+<div class="check">
+<input id="marriageOath" type="checkbox" ${profileData["إقرار_الزواج"]?"checked":""} required>
+<label for="marriageOath">
+أقسم بالله العلي العظيم أنني داخل الموقع بنية الزواج الحلال.
+</label>
+</div>
+
+<button class="btn green" type="submit">حفظ الملف</button>
+<p id="profileMessage"></p>
+
+</form>`;
+
+modal.classList.add("show");
+}
+
+async function saveProfile(event){
+event.preventDefault();
+
+const {data:{user}}=await supabaseClient.auth.getUser();
+
+if(!user){
+alert("يجب تسجيل الدخول.");
+return;
+}
+
+const message=document.getElementById("profileMessage");
+message.textContent="جاري حفظ البيانات...";
+
+const updates={
+"user_id":user.id,
+"الاسم":document.getElementById("name").value.trim(),
+"العمر":Number(document.getElementById("age").value),
+"الجنس":document.getElementById("profileGender").value,
+"لون البشرة":document.getElementById("skin").value.trim(),
+"قبلي_او_حضري":document.getElementById("tribal").value,
+"الحالة_الاجتماعية":document.getElementById("marital").value.trim(),
+"الطول":document.getElementById("height").value?
+Number(document.getElementById("height").value):null,
+"المؤهل_الدراسي":document.getElementById("education").value.trim(),
+"الوظيفة":document.getElementById("job").value.trim(),
+"المدينة":document.getElementById("city").value.trim(),
+"الحالة_الصحية":document.getElementById("health").value.trim(),
+"الحالة_المادية":document.getElementById("financial").value.trim(),
+"نبذة_عن_نفسه":document.getElementById("bio").value.trim(),
+"إقرار_الزواج":document.getElementById("marriageOath").checked
+};
+
+const {data:existing,error:checkError}=await supabaseClient
+.from("profiles")
+.select("id")
+.eq("user_id",user.id)
+.maybeSingle();
+
+if(checkError){
+message.textContent="تعذر التحقق من الملف: "+checkError.message;
+return;
+}
+
+let result;
+
+if(existing){
+result=await supabaseClient
+.from("profiles")
+.update(updates)
+.eq("user_id",user.id);
+}else{
+result=await supabaseClient
+.from("profiles")
+.insert(updates);
+}
+
+if(result.error){
+message.textContent="حدث خطأ أثناء الحفظ: "+result.error.message;
+return;
+}
+
+message.textContent="تم حفظ ملفك الشخصي بنجاح ✅";
+}
+
+async function logout(){
+
+const {error}=await supabaseClient.auth.signOut();
+
+if(error){
+alert("تعذر تسجيل الخروج: "+error.message);
+return;
+}
+
+userbar.classList.remove("show");
+alert("تم تسجيل الخروج.");
+}
+
+function closeModal(){
+modal.classList.remove("show");
+}
+
+function safe(value){
+return String(value||"")
+.replace(/&/g,"&amp;")
+.replace(/</g,"&lt;")
+.replace(/>/g,"&gt;")
+.replace(/"/g,"&quot;")
+.replace(/'/g,"&#039;");
+}
+
+supabaseClient.auth.onAuthStateChange((event,session)=>{
+
+if(session&&session.user){
+userbar.textContent="أنت مسجل الدخول • يمكنك فتح «ملفي» لإكمال بياناتك.";
+userbar.classList.add("show");
+}else{
+userbar.classList.remove("show");
+}
+
+});
+</script>
+
+</body>
+</html>(data["الحالة_الصحية"])}">
 
 <label>الحالة المادية</label>
 <input id="financial" value="${safe(data["الحالة_المادية"])}">
