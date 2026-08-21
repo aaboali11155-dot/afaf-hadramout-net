@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>البحث عن الملفات - عفاف حضرموت نت</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Tahoma,Arial,sans-serif;background:#f7faf8;color:#17372c}header{background:#fff;border-bottom:1px solid #e2eae6;padding:15px 5%;display:flex;justify-content:space-between;align-items:center;gap:12px}.logo{font-size:22px;font-weight:800;color:#155c43}.btn{border:0;border-radius:12px;padding:11px 17px;font-weight:700;cursor:pointer;font-size:15px}.green{background:#176447;color:#fff}.light{background:#e8f1ed;color:#176447}.wrap{max-width:1050px;margin:auto;padding:30px 18px}.panel{background:#fff;border:1px solid #dfe9e4;border-radius:20px;padding:20px;margin-bottom:20px}.filters{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.filters label{font-weight:700;font-size:14px}.filters input,.filters select{width:100%;margin-top:7px;padding:11px;border:1px solid #cbd8d2;border-radius:10px;font-family:inherit;font-size:15px}.actions{display:flex;gap:10px;margin-top:15px;flex-wrap:wrap}.message{padding:10px;border-radius:10px;background:#eef6f1;margin-top:15px}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:15px}.card{background:#fff;border:1px solid #dfe9e4;border-radius:18px;padding:18px}.card h3{margin:0 0 7px;color:#176447}.meta{color:#65746d;font-size:14px;line-height:1.8}.bio{margin-top:10px;line-height:1.8}.empty{text-align:center;color:#65746d;padding:30px}@media(max-width:800px){.filters{grid-template-columns:1fr 1fr}.grid{grid-template-columns:1fr 1fr}}@media(max-width:500px){.filters,.grid{grid-template-columns:1fr}header{padding:13px 4%}.logo{font-size:18px}}
+</style>
+</head>
+<body>
+<header><div class="logo">عفاف حضرموت نت</div><button class="btn light" onclick="location.href='index.html'">الرئيسية</button></header>
+<main class="wrap">
+<div class="panel">
+<h2>البحث عن الملفات</h2>
+<p>ابحث عن ملفات مناسبة بهدف الزواج. لا يتم عرض البريد الإلكتروني أو الحالة الصحية أو الحالة المادية.</p>
+<div class="filters">
+<label>الجنس<select id="gender"><option value="">الكل</option><option value="شاب">شاب</option><option value="بنت">بنت</option></select></label>
+<label>من عمر<input id="minAge" type="number" min="18" max="100" placeholder="مثلاً 20"></label>
+<label>إلى عمر<input id="maxAge" type="number" min="18" max="100" placeholder="مثلاً 35"></label>
+<label>المدينة<input id="city" placeholder="مثلاً المكلا"></label>
+</div>
+<div class="actions"><button class="btn green" onclick="searchProfiles()">بحث</button><button class="btn light" onclick="resetSearch()">مسح</button></div>
+<div id="message"></div>
+</div>
+<div id="results" class="grid"></div>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL='https://zftdssfqavdlsnulpheq.supabase.co';
+const SUPABASE_KEY='sb_publishable_Sdgd2lds7bi-I3rDJA1GrQ_rqNmOk5L';
+const supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+const message=document.getElementById('message'),results=document.getElementById('results');
+function safe(v){return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;')}
+async function searchProfiles(){
+ message.innerHTML='<div class="message">جاري البحث...</div>';results.innerHTML='';
+ const {data:{user}}=await supabaseClient.auth.getUser();
+ if(!user){message.innerHTML='<div class="message">يجب تسجيل الدخول أولاً.</div>';return}
+ const gender=document.getElementById('gender').value||null;
+ const minAge=document.getElementById('minAge').value?Number(document.getElementById('minAge').value):null;
+ const maxAge=document.getElementById('maxAge').value?Number(document.getElementById('maxAge').value):null;
+ const city=document.getElementById('city').value.trim()||null;
+ const {data,error}=await supabaseClient.rpc('search_profiles',{p_gender:gender,p_min_age:minAge,p_max_age:maxAge,p_city:city});
+ if(error){message.innerHTML='<div class="message">تعذر تنفيذ البحث: '+safe(error.message)+'</div>';return}
+ message.innerHTML='<div class="message">تم العثور على '+data.length+' ملف.</div>';
+ if(!data.length){results.innerHTML='<div class="panel empty">لا توجد ملفات مطابقة حاليًا.</div>';return}
+ results.innerHTML=data.map(p=>`<article class="card"><h3>${safe(p.name||'عضو')}</h3><div class="meta">${p.age?safe(p.age)+' سنة • ':''}${safe(p.gender||'')}<br>${safe(p.city||'المدينة غير محددة')}${p.education?' • '+safe(p.education):''}${p.job?' • '+safe(p.job):''}<br>${p.skin?'لون البشرة: '+safe(p.skin):''}${p.tribal?' • '+safe(p.tribal):''}${p.marital?' • '+safe(p.marital):''}${p.height?' • '+safe(p.height)+' سم':''}</div>${p.bio?`<div class="bio">${safe(p.bio)}</div>`:''}</article>`).join('');
+}
+function resetSearch(){document.getElementById('gender').value='';document.getElementById('minAge').value='';document.getElementById('maxAge').value='';document.getElementById('city').value='';message.innerHTML='';results.innerHTML=''}
+</script>
+</body>
+</html>
