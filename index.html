@@ -63,6 +63,19 @@ footer{background:#153d31;color:#dce9e3;padding:25px 6%;display:flex;justify-con
 <button class="close" onclick="closeModal()">×</button><div id="content"></div>
 </div></div>
 
+<!--
+خطة العمل التالية — لا ننتقل للخطوة التالية قبل نجاح الاختبار الحالي:
+1) رفع هذا الملف إلى GitHub بدل index.html القديم.
+2) فتح الموقع من GitHub Pages والتأكد أن الصفحة تفتح بدون أخطاء.
+3) إنشاء حساب تجريبي ببريد جديد.
+4) فتح رسالة تأكيد البريد والضغط على الرابط.
+5) التأكد أن الصفحة تعرض "تم تأكيد البريد" بدل خطأ.
+6) تسجيل الدخول بنفس الحساب والتأكد أن Email not confirmed اختفى.
+7) بعد نجاح الدخول فقط: اختبار فتح "ملفي" وحفظ البيانات.
+8) بعدها اختبار التفضيلات والبحث وطلبات التواصل.
+9) في النهاية مراجعة الحماية والصلاحيات في Supabase قبل اعتبار الموقع جاهزًا.
+لا نغيّر Brevo أو إعدادات Confirm Email أثناء هذه الاختبارات إلا إذا ظهر خطأ يثبت الحاجة لذلك.
+-->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 const SUPABASE_URL="https://zftdssfqavdlsnulpheq.supabase.co";
@@ -115,7 +128,26 @@ async function blockUser(id){const u=await currentUser();if(!u)return;const {err
 async function logout(){await supabaseClient.auth.signOut();userbar.classList.remove("show");alert("تم تسجيل الخروج.")}
 
 supabaseClient.auth.onAuthStateChange((_event,session)=>{if(session?.user){userbar.textContent="تم تسجيل الدخول • يمكنك إكمال بياناتك والبحث عن الملفات.";userbar.classList.add("show");if(_event==="SIGNED_IN")setTimeout(()=>profile(),500)}else userbar.classList.remove("show")});
-(async()=>{if(location.hash.includes("access_token=")&&location.hash.includes("type=signup")){setTimeout(async()=>{const {data:{session}}=await supabaseClient.auth.getSession();if(session?.user)profile()},1200)}})();
+(async()=>{
+  const hash = new URLSearchParams(location.hash.replace(/^#/,""));
+  const tokenHash = hash.get("token_hash") || hash.get("access_token");
+  const type = hash.get("type");
+
+  if(tokenHash && (type === "signup" || type === "email")){
+    const {data,error} = await supabaseClient.auth.verifyOtp({
+      token_hash: tokenHash,
+      type: type === "email" ? "email" : "signup"
+    });
+
+    history.replaceState(null, "", location.pathname + location.search);
+
+    if(error){
+      show(`<h2>تأكيد البريد</h2><p>تعذر تأكيد البريد: ${safe(error.message)}</p>`);
+    }else if(data?.user){
+      show(`<h2>تم تأكيد البريد ✅</h2><p>تم تأكيد بريدك الإلكتروني بنجاح. يمكنك الآن تسجيل الدخول.</p><button class="btn green" onclick="closeModal();login()">تسجيل الدخول</button>`);
+    }
+  }
+})();
 </script>
 </body>
 </html>
