@@ -1,52 +1,24 @@
-<!doctype html>
-<html lang="ar" dir="rtl">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>البحث عن الملفات - عفاف حضرموت نت</title>
+<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>البحث - عفاف حضرموت نت</title>
 <style>
-*{box-sizing:border-box}body{margin:0;font-family:Tahoma,Arial,sans-serif;background:#f7faf8;color:#17372c}header{background:#fff;border-bottom:1px solid #e2eae6;padding:15px 5%;display:flex;justify-content:space-between;align-items:center;gap:12px}.logo{font-size:22px;font-weight:800;color:#155c43}.btn{border:0;border-radius:12px;padding:11px 17px;font-weight:700;cursor:pointer;font-size:15px}.green{background:#176447;color:#fff}.light{background:#e8f1ed;color:#176447}.wrap{max-width:1050px;margin:auto;padding:30px 18px}.panel{background:#fff;border:1px solid #dfe9e4;border-radius:20px;padding:20px;margin-bottom:20px}.filters{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.filters label{font-weight:700;font-size:14px}.filters input,.filters select{width:100%;margin-top:7px;padding:11px;border:1px solid #cbd8d2;border-radius:10px;font-family:inherit;font-size:15px}.actions{display:flex;gap:10px;margin-top:15px;flex-wrap:wrap}.message{padding:10px;border-radius:10px;background:#eef6f1;margin-top:15px}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:15px}.card{background:#fff;border:1px solid #dfe9e4;border-radius:18px;padding:18px}.card h3{margin:0 0 7px;color:#176447}.meta{color:#65746d;font-size:14px;line-height:1.8}.bio{margin-top:10px;line-height:1.8}.empty{text-align:center;color:#65746d;padding:30px}@media(max-width:800px){.filters{grid-template-columns:1fr 1fr}.grid{grid-template-columns:1fr 1fr}}@media(max-width:500px){.filters,.grid{grid-template-columns:1fr}header{padding:13px 4%}.logo{font-size:18px}}
-</style>
-</head>
-<body>
-<header><div class="logo">عفاف حضرموت نت</div><button class="btn light" onclick="location.href='index.html'">الرئيسية</button></header>
-<main class="wrap">
-<div class="panel">
-<h2>البحث عن الملفات</h2>
-<p>ابحث عن ملفات مناسبة بهدف الزواج. لا يتم عرض البريد الإلكتروني أو الحالة الصحية أو الحالة المادية.</p>
-<div class="filters">
-<label>الجنس<select id="gender"><option value="">الكل</option><option value="شاب">شاب</option><option value="بنت">بنت</option></select></label>
-<label>من عمر<input id="minAge" type="number" min="18" max="100" placeholder="مثلاً 20"></label>
-<label>إلى عمر<input id="maxAge" type="number" min="18" max="100" placeholder="مثلاً 35"></label>
-<label>المدينة<input id="city" placeholder="مثلاً المكلا"></label>
-</div>
-<div class="actions"><button class="btn green" onclick="searchProfiles()">بحث</button><button class="btn light" onclick="resetSearch()">مسح</button></div>
-<div id="message"></div>
-</div>
-<div id="results" class="grid"></div>
-</main>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>
-const SUPABASE_URL='https://zftdssfqavdlsnulpheq.supabase.co';
-const SUPABASE_KEY='sb_publishable_Sdgd2lds7bi-I3rDJA1GrQ_rqNmOk5L';
-const supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
-const message=document.getElementById('message'),results=document.getElementById('results');
-function safe(v){return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;')}
-async function searchProfiles(){
- message.innerHTML='<div class="message">جاري البحث...</div>';results.innerHTML='';
- const {data:{user}}=await supabaseClient.auth.getUser();
- if(!user){message.innerHTML='<div class="message">يجب تسجيل الدخول أولاً.</div>';return}
- const gender=document.getElementById('gender').value||null;
- const minAge=document.getElementById('minAge').value?Number(document.getElementById('minAge').value):null;
- const maxAge=document.getElementById('maxAge').value?Number(document.getElementById('maxAge').value):null;
- const city=document.getElementById('city').value.trim()||null;
- const {data,error}=await supabaseClient.rpc('search_profiles',{p_gender:gender,p_min_age:minAge,p_max_age:maxAge,p_city:city});
- if(error){message.innerHTML='<div class="message">تعذر تنفيذ البحث: '+safe(error.message)+'</div>';return}
- message.innerHTML='<div class="message">تم العثور على '+data.length+' ملف.</div>';
- if(!data.length){results.innerHTML='<div class="panel empty">لا توجد ملفات مطابقة حاليًا.</div>';return}
- results.innerHTML=data.map(p=>`<article class="card"><h3>${safe(p.name||'عضو')}</h3><div class="meta">${p.age?safe(p.age)+' سنة • ':''}${safe(p.gender||'')}<br>${safe(p.city||'المدينة غير محددة')}${p.education?' • '+safe(p.education):''}${p.job?' • '+safe(p.job):''}<br>${p.skin?'لون البشرة: '+safe(p.skin):''}${p.tribal?' • '+safe(p.tribal):''}${p.marital?' • '+safe(p.marital):''}${p.height?' • '+safe(p.height)+' سم':''}</div>${p.bio?`<div class="bio">${safe(p.bio)}</div>`:''}</article>`).join('');
-}
-function resetSearch(){document.getElementById('gender').value='';document.getElementById('minAge').value='';document.getElementById('maxAge').value='';document.getElementById('city').value='';message.innerHTML='';results.innerHTML=''}
-</script>
-</body>
-</html>
+*{box-sizing:border-box}body{margin:0;font-family:Tahoma,Arial,sans-serif;background:#f7faf8;color:#17372c}header{background:#fff;border-bottom:1px solid #e2eae6;padding:14px 5%;display:flex;justify-content:space-between;align-items:center}.logo{font-size:21px;font-weight:800;color:#155c43}.btn{border:0;border-radius:11px;padding:10px 15px;font-weight:700;cursor:pointer;font-family:inherit}.green{background:#176447;color:#fff}.light{background:#e8f1ed;color:#176447}.danger{background:#f9e5e5;color:#9a2929}.wrap{max-width:1100px;margin:auto;padding:25px 16px}.panel,.card{background:#fff;border:1px solid #dfe9e4;border-radius:18px;padding:18px}.panel{margin-bottom:18px}.filters{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.filters input,.filters select{width:100%;margin-top:6px;padding:10px;border:1px solid #cbd8d2;border-radius:9px;font-family:inherit}.actions,.card-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:15px}.meta{color:#65746d;font-size:14px;line-height:1.9}.bio{line-height:1.8;margin-top:7px}.message{padding:10px;background:#eef6f1;border-radius:10px;margin-top:10px}.empty{text-align:center;color:#65746d;padding:30px}@media(max-width:800px){.filters{grid-template-columns:1fr 1fr}.grid{grid-template-columns:1fr 1fr}}@media(max-width:500px){.filters,.grid{grid-template-columns:1fr}}
+</style></head><body><header><div class="logo">عفاف حضرموت نت</div><button class="btn light" onclick="location.href='index.html'">الرئيسية</button></header>
+<main class="wrap"><div class="panel"><h2>البحث عن الملفات</h2><p>الشاب يرى البنات فقط، والبنت ترى الشباب فقط. البيانات الخاصة لا تظهر في نتائج البحث.</p>
+<div class="filters"><label>من عمر<input id="minAge" type="number" min="18"></label><label>إلى عمر<input id="maxAge" type="number" max="100"></label><label>المدينة<input id="city"></label><label>المؤهل<input id="edu"></label></div>
+<div class="actions"><button class="btn green" onclick="searchProfiles()">بحث</button><button class="btn light" onclick="resetSearch()">مسح</button></div><div id="message"></div></div><div id="results" class="grid"></div></main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script>
+const supabaseClient=window.supabase.createClient("https://zftdssfqavdlsnulpheq.supabase.co","sb_publishable_Sdgd2lds7bi-I3rDJA1GrQ_rqNmOk5L");
+const message=document.getElementById("message"),results=document.getElementById("results");function safe(v){return String(v??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;")}
+async function searchProfiles(){message.innerHTML='<div class="message">جاري البحث...</div>';results.innerHTML="";const {data:{user}}=await supabaseClient.auth.getUser();if(!user){message.innerHTML='<div class="message">يجب تسجيل الدخول أولاً.</div>';return}
+const my=await supabaseClient.from("profiles").select("الجنس").eq("user_id",user.id).maybeSingle();const g=my.data?.الجنس==="شاب"?"بنت":my.data?.الجنس==="بنت"?"شاب":null;if(!g){message.innerHTML='<div class="message">أكمل ملفك أولاً.</div>';return}
+let q=supabaseClient.from("profiles").select('user_id,الاسم,العمر,الجنس,"لون البشرة",قبلي_او_حضري,المؤهل_الدراسي,الوظيفة,المدينة,نبذة_عن_نفسه').eq("الجنس",g).eq("account_status","active").neq("user_id",user.id).limit(50);
+const a=Number(minAge.value),b=Number(maxAge.value);if(a)q=q.gte("العمر",a);if(b)q=q.lte("العمر",b);if(city.value.trim())q=q.ilike("المدينة","%"+city.value.trim()+"%");if(edu.value.trim())q=q.ilike("المؤهل_الدراسي","%"+edu.value.trim()+"%");
+const {data,error}=await q;if(error){message.innerHTML='<div class="message">'+safe(error.message)+"</div>";return}
+message.innerHTML='<div class="message">تم العثور على '+data.length+" ملف.</div>";results.innerHTML=data.length?data.map(p=>`<article class="card"><h3>${safe(p["الاسم"]||"عضو")}</h3><div class="meta">${safe(p["العمر"]||"")} سنة • ${safe(p["الجنس"]||"")}<br>${safe(p["المدينة"]||"غير محددة")} ${p["المؤهل_الدراسي"]?"• "+safe(p["المؤهل_الدراسي"]):""}<br>${p["لون البشرة"]?"لون البشرة: "+safe(p["لون البشرة"]):""}${p["قبلي_او_حضري"]?" • "+safe(p["قبلي_او_حضري"]):""}</div>${p["نبذة_عن_نفسه"]?`<div class="bio">${safe(p["نبذة_عن_نفسه"])}</div>`:""}<div class="card-actions"><button class="btn green" onclick="openProfile('${p.user_id}')">عرض الملف</button><button class="btn light" onclick="privateRequest('${p.user_id}')">طلب تواصل خاص</button><button class="btn green" onclick="officialRequest('${p.user_id}')">طلب رسمي</button><button class="btn danger" onclick="reportUser('${p.user_id}')">إبلاغ</button><button class="btn danger" onclick="blockUser('${p.user_id}')">حظر</button></div></article>`).join(""):'<div class="panel empty">لا توجد ملفات مطابقة.</div>'}
+async function openProfile(id){const {data:{user}}=await supabaseClient.auth.getUser();if(user)await supabaseClient.from("profile_views").upsert({viewer_id:user.id,viewed_user_id:id},{onConflict:"viewer_id,viewed_user_id"});location.href="chat.html?user="+encodeURIComponent(id)}
+async function makeRequest(id,type){const msg=prompt(type==="private"?"اكتب استفسارك للتعارف بنية الزواج (الطلب الخاص يمر على المشرف قبل فتح المراسلة):":"اكتب رسالة الطلب الرسمي للمشرف:");if(!msg)return;const {data:{user}}=await supabaseClient.auth.getUser();const {error}=await supabaseClient.from("contact_requests").insert({sender_user_id:user.id,receiver_user_id:id,status:"pending",message:msg.trim(),request_type:type});alert(error?"تعذر إرسال الطلب: "+error.message:"تم إرسال الطلب للمشرف للمراجعة ✅")}
+function privateRequest(id){makeRequest(id,"private")}function officialRequest(id){makeRequest(id,"official")}
+async function reportUser(id){const {data:{user}}=await supabaseClient.auth.getUser();const reason=prompt("سبب الإبلاغ:");if(!reason)return;const details=prompt("تفاصيل إضافية:")||"";const {error}=await supabaseClient.from("reports").insert({reporter_id:user.id,reported_user_id:id,reason,details,status:"pending"});alert(error?"تعذر إرسال البلاغ: "+error.message:"تم إرسال البلاغ للمشرف ✅")}
+async function blockUser(id){const {data:{user}}=await supabaseClient.auth.getUser();if(!confirm("حظر هذا المستخدم؟"))return;const {error}=await supabaseClient.from("user_blocks").insert({blocker_id:user.id,blocked_id:id});alert(error?"تعذر الحظر: "+error.message:"تم الحظر.");searchProfiles()}
+function resetSearch(){minAge.value="";maxAge.value="";city.value="";edu.value="";message.innerHTML="";results.innerHTML=""}
+searchProfiles();
+</script></body></html>
