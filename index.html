@@ -17,20 +17,20 @@ h1{font-size:40px;line-height:1.4;margin:14px 0}h2{text-align:center;font-size:2
 .modalbox{background:#fff;border-radius:18px;padding:25px;width:min(700px,100%);max-height:92vh;overflow:auto;position:relative}.close{position:absolute;left:12px;top:6px;background:none;border:0;font-size:27px;cursor:pointer}
 .userbar{display:none;padding:9px 5%;background:#e8f1ed;text-align:center}.userbar.show{display:block}.muted{font-size:13px;color:#65746d}
 footer{background:#153d31;color:#dce9e3;padding:28px 6%;display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px}.footer-contact{color:#dce9e3}
-.notice{padding:10px;border-radius:10px;background:#eef6f1;margin-top:10px}.notice.err{background:#f9e5e5;color:#9a2929}
+.profile-view{display:grid;gap:8px}.profile-row{display:flex;justify-content:space-between;gap:15px;padding:11px;border-bottom:1px solid #e5ece8}.profile-row b{color:#176447}.profile-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
 @media(max-width:760px){.hero{grid-template-columns:1fr}h1{font-size:31px}.grid{grid-template-columns:1fr 1fr}}
 @media(max-width:480px){.grid{grid-template-columns:1fr}header{padding:10px 4%}.logo{font-size:18px}}
 </style>
 </head>
 <body>
 <header>
-<div class="brand"><img src="assets/logo.svg" alt="شعار عفاف حضرموت نت"><div><div class="logo">عفاف حضرموت نت</div><div class="sub">منصة الزواج الخيري في حضرموت</div></div></div>
+<div class="brand"><img src="logo.svg" alt="شعار عفاف حضرموت نت"><div><div class="logo">عفاف حضرموت نت</div><div class="sub">منصة الزواج الخيري في حضرموت</div></div></div>
 <nav>
-<button id="loginBtn" class="btn light" onclick="login()">دخول</button><button class="btn green" onclick="register()">إنشاء حساب</button>
+<button class="btn light" onclick="login()">دخول</button><button class="btn green" onclick="register()">إنشاء حساب</button>
 <button class="btn light" onclick="profile()">ملفي</button><button class="btn light" onclick="searchProfiles()">البحث</button>
 <button class="btn light" onclick="preferences()">التفضيلات</button><button class="btn light" onclick="myRequests()">طلبات التواصل</button>
 <button class="btn light" onclick="myViews()">من شاهد ملفي</button><button class="btn light" onclick="contactUs()">تواصل معنا</button><button class="btn danger" onclick="reportSiteIssue()">الإبلاغ عن عطل</button>
-<button id="logoutBtn" class="btn light" onclick="logout()">خروج</button>
+<button class="btn light" onclick="logout()">خروج</button>
 </nav>
 </header>
 <div id="userbar" class="userbar"></div>
@@ -39,7 +39,7 @@ footer{background:#153d31;color:#dce9e3;padding:28px 6%;display:flex;justify-con
 <div><span class="badge">مشروع خيري • مجاني</span><h1>نسعى لمساعدة الشباب والفتيات على الزواج الحلال</h1>
 <p>منصة محترمة وآمنة للتعارف والاستفسار بنية الزواج، مع خصوصية للملفات ومراجعة المشرف للطلبات الخاصة والرسمية.</p>
 <button class="btn green" onclick="register()">ابدأ التسجيل</button></div>
-<img class="hero-img" src="assets/hero.svg" alt="توضيح لمنصة الزواج الخيري">
+<img class="hero-img" src="hero.svg" alt="توضيح لمنصة الزواج الخيري">
 </section>
 
 <section class="section"><h2>أقسام الموقع</h2><div class="grid">
@@ -55,7 +55,6 @@ footer{background:#153d31;color:#dce9e3;padding:28px 6%;display:flex;justify-con
 </div></section>
 
 <section class="section"><div class="card"><h2>تواصل معنا</h2><p>للاستفسارات أو البلاغات العامة استخدم نموذج التواصل، وستصل الرسالة للمشرف.</p><button class="btn green" onclick="contactUs()">فتح نموذج التواصل</button></div></section>
-
 <footer><strong>عفاف حضرموت نت</strong><span>منصة الزواج الخيري في حضرموت</span><span class="footer-contact">الخصوصية • الشروط • الإبلاغ • تواصل معنا • الإبلاغ عن عطل</span></footer>
 
 <div class="modal" id="modal" onclick="if(event.target===this)closeModal()"><div class="modalbox"><button class="close" onclick="closeModal()">×</button><div id="content"></div></div></div>
@@ -65,11 +64,11 @@ footer{background:#153d31;color:#dce9e3;padding:28px 6%;display:flex;justify-con
 const SUPABASE_URL="https://zftdssfqavdlsnulpheq.supabase.co";
 const SUPABASE_KEY="sb_publishable_Sdgd2lds7bi-I3rDJA1GrQ_rqNmOk5L";
 const supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
-const modal=document.getElementById("modal"),content=document.getElementById("content"),userbar=document.getElementById("userbar"),loginBtn=document.getElementById("loginBtn");
-function show(h){content.innerHTML=h;modal.classList.add("show")}function closeModal(){modal.classList.remove("show")}
+const modal=document.getElementById("modal"),content=document.getElementById("content"),userbar=document.getElementById("userbar");
+function show(h){content.innerHTML=h;modal.classList.add("show")}
+function closeModal(){modal.classList.remove("show")}
 function safe(v){return String(v??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;")}
 async function currentUser(){return (await supabaseClient.auth.getUser()).data.user}
-async function profileExists(u){return !!(await supabaseClient.from("profiles").select("id").eq("user_id",u.id).maybeSingle()).data}
 
 function register(){show(`<h2>إنشاء حساب</h2><form class="form" onsubmit="createAccount(event)">
 <label>نوع الحساب</label><select id="gender" required><option value="">اختر</option><option>شاب</option><option>بنت</option></select>
@@ -82,11 +81,29 @@ msg.textContent=error?"حدث خطأ: "+error.message:"تم إنشاء الحس�
 async function login(){const u=await currentUser();if(u){userbar.textContent="أنت مسجل دخول بالفعل ✅";userbar.classList.add("show");return}
 show(`<h2>تسجيل الدخول</h2><form class="form" onsubmit="loginAccount(event)"><label>البريد</label><input id="loginEmail" type="email" required><label>كلمة المرور</label><input id="loginPassword" type="password" required><button class="btn green">دخول</button><p id="loginMsg"></p></form>`)}
 async function loginAccount(e){e.preventDefault();const m=document.getElementById("loginMsg");const {error}=await supabaseClient.auth.signInWithPassword({email:loginEmail.value.trim(),password:loginPassword.value});if(error){m.textContent="خطأ: "+error.message;return}closeModal();await afterLogin()}
-async function afterLogin(){const u=await currentUser();if(!u)return;userbar.textContent="تم تسجيل الدخول بنجاح ✅";userbar.classList.add("show");/* لا نفتح "أكمل بياناتك" تلقائيًا بعد تسجيل الدخول؛ المستخدم يفتح "ملفي" بنفسه. */}
+async function afterLogin(){const u=await currentUser();if(!u)return;userbar.textContent="تم تسجيل الدخول بنجاح ✅";userbar.classList.add("show")}
+
+/* الجديد: ملقي يفتح عرض فقط، والتعديل لا يظهر إلا بعد الضغط على «تعديل البيانات». */
 async function profile(){
 const u=await currentUser();if(!u){login();return}
-const {data:p,error}=await supabaseClient.from("profiles").select("*").eq("user_id",u.id).maybeSingle();if(error){show(`<p>خطأ: ${safe(error.message)}</p>`);return}
-const x=p||{};show(`<h2>${p?"ملفي وتعديل البيانات":"أكمل بياناتك"}</h2><form class="form" onsubmit="saveProfile(event)">
+const {data:p,error}=await supabaseClient.from("profiles").select("*").eq("user_id",u.id).maybeSingle();
+if(error){show(`<p>خطأ: ${safe(error.message)}</p>`);return}
+if(!p){editProfile(null);return}
+const rows=[
+["الاسم",p["الاسم"]],["العمر",p["العمر"]?p["العمر"]+" سنة":""],["الجنس",p["الجنس"]],["لون البشرة",p["لون البشرة"]],
+["قبلي أو حضري",p["قبلي_او_حضري"]],["الحالة الاجتماعية",p["الحالة_الاجتماعية"]],["الطول",p["الطول"]],
+["المؤهل الدراسي",p["المؤهل_الدراسي"]],["الوظيفة",p["الوظيفة"]],["المدينة",p["المدينة"]],
+["الحالة الصحية",p["الحالة_الصحية"]],["الحالة المادية",p["الحالة_المادية"]],["نبذة عن نفسك",p["نبذة_عن_نفسه"]]
+];
+show(`<h2>ملفي</h2><p class="muted">عرض بياناتك فقط. للتعديل اضغط «تعديل البيانات».</p>
+<div class="profile-view">${rows.map(r=>`<div class="profile-row"><b>${safe(r[0])}</b><span>${safe(r[1]||"غير مضاف")}</span></div>`).join("")}</div>
+<div class="profile-actions"><button class="btn green" onclick="editProfile()">تعديل البيانات</button><button class="btn light" onclick="preferences()">مواصفات شريك الحياة</button></div>`)
+}
+
+async function editProfile(){
+const u=await currentUser();if(!u){login();return}
+const {data:p}=await supabaseClient.from("profiles").select("*").eq("user_id",u.id).maybeSingle();const x=p||{};
+show(`<h2>${p?"تعديل البيانات":"أكمل بياناتك"}</h2><form class="form" onsubmit="saveProfile(event)">
 <label>الاسم</label><input id="name" value="${safe(x["الاسم"])}" required><label>العمر</label><input id="age" type="number" min="18" max="100" value="${safe(x["العمر"])}" required>
 <label>الجنس</label><select id="pg" required><option value="شاب" ${x["الجنس"]==="شاب"?"selected":""}>شاب</option><option value="بنت" ${x["الجنس"]==="بنت"?"selected":""}>بنت</option></select>
 <label>لون البشرة</label><input id="skin" value="${safe(x["لون البشرة"])}"><label>قبلي أو حضري</label><select id="trib"><option value="">اختر</option><option ${x["قبلي_او_حضري"]==="قبلي"?"selected":""}>قبلي</option><option ${x["قبلي_او_حضري"]==="حضري"?"selected":""}>حضري</option></select>
@@ -95,9 +112,14 @@ const x=p||{};show(`<h2>${p?"ملفي وتعديل البيانات":"أكمل �
 <label>الحالة الصحية</label><input id="health" value="${safe(x["الحالة_الصحية"])}"><label>الحالة المادية</label><input id="financial" value="${safe(x["الحالة_المادية"])}">
 <label>نبذة عن نفسك</label><textarea id="bio">${safe(x["نبذة_عن_نفسه"])}</textarea>
 <div class="check"><input id="oath2" type="checkbox" ${x["إقرار_الزواج"]?"checked":""} required><label>أقسم بالله العلي العظيم أنني داخل الموقع بنية الزواج الحلال.</label></div>
-<button class="btn green">حفظ الملف</button><p id="pmsg"></p></form>
-<hr><button class="btn light" onclick="preferences()">مواصفات شريك الحياة</button>`)}
-async function saveProfile(e){e.preventDefault();const u=await currentUser();const v=id=>document.getElementById(id).value.trim();const up={"user_id":u.id,"الاسم":v("name"),"العمر":Number(v("age")),"الجنس":v("pg"),"لون البشرة":v("skin"),"قبلي_او_حضري":v("trib"),"الحالة_الاجتماعية":v("marital"),"الطول":v("height")?Number(v("height")):null,"المؤهل_الدراسي":v("education"),"الوظيفة":v("job"),"المدينة":v("city"),"الحالة_الصحية":v("health"),"الحالة_المادية":v("financial"),"نبذة_عن_نفسه":v("bio"),"إقرار_الزواج":oath2.checked};const old=await supabaseClient.from("profiles").select("id").eq("user_id",u.id).maybeSingle();const r=old.data?await supabaseClient.from("profiles").update(up).eq("user_id",u.id):await supabaseClient.from("profiles").insert(up);pmsg.textContent=r.error?"خطأ: "+r.error.message:"تم حفظ ملفك بنجاح ✅";if(!r.error)setTimeout(closeModal,700)}
+<button class="btn green">حفظ البيانات</button><button type="button" class="btn light" onclick="profile()">إلغاء</button><p id="pmsg"></p></form>`)
+}
+
+async function saveProfile(e){e.preventDefault();const u=await currentUser();const v=id=>document.getElementById(id).value.trim();
+const up={"user_id":u.id,"الاسم":v("name"),"العمر":Number(v("age")),"الجنس":v("pg"),"لون البشرة":v("skin"),"قبلي_او_حضري":v("trib"),"الحالة_الاجتماعية":v("marital"),"الطول":v("height")?Number(v("height")):null,"المؤهل_الدراسي":v("education"),"الوظيفة":v("job"),"المدينة":v("city"),"الحالة_الصحية":v("health"),"الحالة_المادية":v("financial"),"نبذة_عن_نفسه":v("bio"),"إقرار_الزواج":oath2.checked};
+const old=await supabaseClient.from("profiles").select("id").eq("user_id",u.id).maybeSingle();const r=old.data?await supabaseClient.from("profiles").update(up).eq("user_id",u.id):await supabaseClient.from("profiles").insert(up);
+pmsg.textContent=r.error?"خطأ: "+r.error.message:"تم حفظ ملفك بنجاح ✅";if(!r.error)setTimeout(profile,700)}
+
 async function preferences(){const u=await currentUser();if(!u){login();return}const {data:p}=await supabaseClient.from("partner_preferences").select("*").eq("user_id",u.id).maybeSingle();const x=p||{};show(`<h2>مواصفات شريك الحياة</h2><form class="form" onsubmit="savePreferences(event)">
 <label>الجنس المطلوب</label><select id="prefGender"><option value="">أي</option><option value="شاب" ${x.preferred_gender==="شاب"?"selected":""}>شاب</option><option value="بنت" ${x.preferred_gender==="بنت"?"selected":""}>بنت</option></select>
 <label>العمر من</label><input id="minAge" type="number" min="18" value="${x.min_age??18}"><label>العمر إلى</label><input id="maxAge" type="number" max="100" value="${x.max_age??60}">
@@ -107,7 +129,7 @@ async function savePreferences(e){e.preventDefault();const u=await currentUser()
 async function searchProfiles(){const u=await currentUser();if(!u){login();return}location.href="search.html"}
 async function myRequests(){const u=await currentUser();if(!u){login();return}const {data,error}=await supabaseClient.from("contact_requests").select("*").or(`sender_user_id.eq.${u.id},receiver_user_id.eq.${u.id}`).order("created_at",{ascending:false});if(error){show(`<p>خطأ: ${safe(error.message)}</p>`);return}show(`<h2>طلبات التواصل</h2><p>الطلب الرسمي والطلب الخاص منفصلان، وكلاهما يمر على المشرف.</p>${(data||[]).map(r=>`<div class="card"><b>${r.request_type==="private"?"طلب تواصل خاص":"طلب تواصل رسمي"} • الحالة: ${safe(r.status)}</b><p>${safe(r.message||"")}</p>${r.status==="approved"&&r.request_type==="private"?`<button class="btn green" onclick="openChat('${r.sender_user_id===u.id?r.receiver_user_id:r.sender_user_id}')">فتح المراسلة</button>`:""}</div>`).join("")||"<p>لا توجد طلبات.</p>"}`)}
 function openChat(id){location.href="chat.html?user="+encodeURIComponent(id)}
-async function myViews(){const u=await currentUser();if(!u){login();return}const {data,error}=await supabaseClient.from("profile_views").select("viewer_id,created_at").eq("viewed_user_id",u.id).order("created_at",{ascending:false});if(error){show(`<p>خطأ: ${safe(error.message)}</p>`);return}const ids=[...new Set((data||[]).map(x=>x.viewer_id))];if(!ids.length){show("<h2>من شاهد ملفي</h2><p>لا توجد مشاهدات حتى الآن.</p>");return}const {data:p}=await supabaseClient.from("profiles").select('user_id,الاسم,العمر,الجنس,المدينة').in("user_id",ids);show(`<h2>من شاهد ملفي</h2>${(p||[]).map(x=>`<div class="card"><b>${safe(x["الاسم"]||"عضو")}</b><p>${safe(x["العمر"]||"")} سنة • ${safe(x["الجنس"]||"")} • ${safe(x["المدينة"]||"")}</p></div>`).join("")}`)}
+async function myViews(){const u=await currentUser();if(!u){login();return}const {data,error}=await supabaseClient.from("profile_views").select("viewer_id,created_at").eq("viewed_user_id",u.id).order("created_at",{ascending:false});if(error){show(`<p>خطأ: ${safe(error.message)}</p>`);return}const ids=[...new Set((data||[]).map(x=>x.viewer_id))];if(!ids.length){show("<h2>من شاهد ملفي</h2><p>لا توجد مشاهدات حتى الآن.</p>");return}const {data:p}=await supabaseClient.from("profiles").select("user_id,الاسم,العمر,الجنس,المدينة").in("user_id",ids);show(`<h2>من شاهد ملفي</h2>${(p||[]).map(x=>`<div class="card"><b>${safe(x["الاسم"]||"عضو")}</b><p>${safe(x["العمر"]||"")} سنة • ${safe(x["الجنس"]||"")} • ${safe(x["المدينة"]||"")}</p></div>`).join("")}`)}
 async function contactUs(){const u=await currentUser();show(`<h2>تواصل معنا</h2><form class="form" onsubmit="sendContact(event)"><label>الاسم</label><input id="cname" value="${u?.user_metadata?.name||""}"><label>البريد الإلكتروني</label><input id="cemail" type="email" value="${u?.email||""}"><label>الرسالة</label><textarea id="cmessage" maxlength="3000" required></textarea><button class="btn green">إرسال</button><p id="cmsg"></p></form>`)}
 async function reportSiteIssue(){const u=await currentUser();show(`<h2>الإبلاغ عن عطل داخل الموقع</h2><p>اكتب وصفًا واضحًا للعطل، وسيراجعه المشرف.</p><form class="form" onsubmit="sendSiteIssue(event)"><label>الاسم</label><input id="iname" value="${safe(u?.user_metadata?.name||"")}"><label>البريد الإلكتروني</label><input id="iemail" type="email" value="${safe(u?.email||"")}" ${u?"":"required"}><label>الصفحة التي ظهر فيها العطل</label><input id="ipage" value="${safe(location.href)}"><label>وصف العطل</label><textarea id="idescription" maxlength="5000" required placeholder="مثلاً: عند الضغط على حفظ لا يتم حفظ البيانات"></textarea><button class="btn danger">إرسال بلاغ العطل</button><p id="imsg"></p></form>`)}
 async function sendSiteIssue(e){e.preventDefault();const u=await currentUser();const {error}=await supabaseClient.from("site_issues").insert({reporter_id:u?.id||null,name:iname.value.trim(),email:iemail.value.trim(),page_url:ipage.value.trim(),description:idescription.value.trim(),status:"new"});imsg.textContent=error?"تعذر إرسال البلاغ: "+error.message:"تم إرسال بلاغ العطل للمشرف ✅";if(!error)setTimeout(closeModal,900)}
