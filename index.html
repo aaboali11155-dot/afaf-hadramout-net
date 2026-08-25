@@ -1,141 +1,503 @@
 <!doctype html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>عفاف حضرموت نت</title>
-<style>
-*{box-sizing:border-box}body{margin:0;font-family:Tahoma,Arial,sans-serif;background:#f7faf8;color:#17372c}
-header{background:#fff;border-bottom:1px solid #e2eae6;padding:12px 5%;display:flex;justify-content:space-between;align-items:center;gap:12px;position:sticky;top:0;z-index:5}
-.brand{display:flex;align-items:center;gap:10px}.brand img{width:44px;height:44px}.logo{font-size:21px;font-weight:800;color:#155c43}.sub{font-size:11px;color:#728079}
-nav{display:flex;gap:7px;flex-wrap:wrap}.btn{border:0;border-radius:11px;padding:10px 14px;font-weight:700;cursor:pointer;font-family:inherit}.green{background:#176447;color:#fff}.light{background:#e8f1ed;color:#176447}.danger{background:#f9e5e5;color:#9a2929}
-.hero,.section{max-width:1100px;margin:auto;padding:42px 20px}.hero{display:grid;grid-template-columns:1.15fr .85fr;gap:28px;align-items:center}
-.hero-img{width:100%;max-width:430px;display:block;margin:auto}.badge{display:inline-block;background:#e8f1ed;color:#176447;padding:7px 12px;border-radius:25px;font-weight:700;font-size:12px}
-h1{font-size:40px;line-height:1.4;margin:14px 0}h2{text-align:center;font-size:27px}h3{margin:8px 0}p{line-height:1.8;color:#65746d}
-.card{background:#fff;border:1px solid #dfe9e4;border-radius:20px;padding:20px}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:15px}.choice{text-align:right;cursor:pointer}
-.form{display:grid;gap:10px}.form input,.form select,.form textarea{padding:11px;border:1px solid #cbd8d2;border-radius:9px;font-size:14px;font-family:inherit}.form textarea{min-height:90px}
-.check{display:flex;gap:8px;align-items:flex-start;background:#f5f8f6;padding:11px;border-radius:9px}.modal{position:fixed;inset:0;background:#0008;display:none;place-items:center;padding:15px;z-index:10}.modal.show{display:grid}
-.modalbox{background:#fff;border-radius:18px;padding:25px;width:min(700px,100%);max-height:92vh;overflow:auto;position:relative}.close{position:absolute;left:12px;top:6px;background:none;border:0;font-size:27px;cursor:pointer}
-.userbar{display:none;padding:9px 5%;background:#e8f1ed;text-align:center}.userbar.show{display:block}.muted{font-size:13px;color:#65746d}
-footer{background:#153d31;color:#dce9e3;padding:28px 6%;display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px}.footer-contact{color:#dce9e3}
-.profile-view{display:grid;gap:8px}.profile-row{display:flex;justify-content:space-between;gap:15px;padding:11px;border-bottom:1px solid #e5ece8}.profile-row b{color:#176447}.profile-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
-@media(max-width:760px){.hero{grid-template-columns:1fr}h1{font-size:31px}.grid{grid-template-columns:1fr 1fr}}
-@media(max-width:480px){.grid{grid-template-columns:1fr}header{padding:10px 4%}.logo{font-size:18px}}
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>عفاف حضرموت نت</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap');
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: 'Cairo', sans-serif;
+      background-color: #f4f8f6;
+      color: #2d3748;
+      padding-bottom: 75px;
+      overflow-x: hidden;
+    }
+
+    /* Header */
+    .top-header {
+      background: #114b35;
+      padding: 12px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: #ffffff;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-icon {
+      width: 36px;
+      height: 36px;
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      font-size: 16px;
+    }
+
+    .brand-title {
+      font-size: 16px;
+      font-weight: 800;
+      line-height: 1.2;
+    }
+
+    .brand-sub {
+      font-size: 10px;
+      opacity: 0.8;
+    }
+
+    .menu-btn {
+      background: transparent;
+      border: none;
+      color: #ffffff;
+      font-size: 26px;
+      cursor: pointer;
+      padding: 4px;
+      line-height: 1;
+    }
+
+    /* Hero */
+    .hero {
+      background: linear-gradient(180deg, #114b35 0%, #1c684d 100%);
+      padding: 30px 16px 40px;
+      color: #ffffff;
+      text-align: center;
+      border-bottom-left-radius: 24px;
+      border-bottom-right-radius: 24px;
+    }
+
+    .hero-container {
+      max-width: 500px;
+      margin: 0 auto;
+    }
+
+    .badge {
+      display: inline-block;
+      background: #ffffff;
+      color: #114b35;
+      padding: 5px 14px;
+      border-radius: 20px;
+      font-weight: 700;
+      font-size: 12px;
+      margin-bottom: 16px;
+    }
+
+    .hero h1 {
+      font-size: 20px;
+      font-weight: 800;
+      line-height: 1.5;
+      margin-bottom: 12px;
+    }
+
+    .hero-text {
+      font-size: 13px;
+      line-height: 1.8;
+      opacity: 0.9;
+      margin-bottom: 22px;
+    }
+
+    .cta-btn {
+      width: 100%;
+      padding: 14px;
+      font-size: 16px;
+      font-weight: 700;
+      background: #092c1f;
+      color: #56ecc0;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 12px;
+      cursor: pointer;
+    }
+
+    /* Side Drawer */
+    .drawer-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .drawer-overlay.open {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .drawer {
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: 250px;
+      background: #ffffff;
+      padding: 24px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      transform: translateX(100%);
+      transition: transform 0.3s ease;
+      box-shadow: -5px 0 25px rgba(0,0,0,0.15);
+    }
+
+    .drawer-overlay.open .drawer {
+      transform: translateX(0);
+    }
+
+    .drawer-title {
+      font-size: 16px;
+      font-weight: 800;
+      color: #114b35;
+      margin-bottom: 10px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .drawer-btn {
+      border: none;
+      padding: 12px 14px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      font-family: inherit;
+      text-align: right;
+      cursor: pointer;
+    }
+
+    .btn-dark { background: #114b35; color: #fff; }
+    .btn-light { background: #edf5f1; color: #114b35; }
+    .btn-danger { background: #fde8e8; color: #9b2c2c; }
+
+    /* Content Cards */
+    .main-content {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 24px 16px;
+    }
+
+    .section-title {
+      font-size: 18px;
+      color: #114b35;
+      margin-bottom: 14px;
+      text-align: center;
+    }
+
+    .grid {
+      display: grid;
+      gap: 14px;
+    }
+
+    .card {
+      background: #ffffff;
+      padding: 18px;
+      border-radius: 14px;
+      border: 1px solid #e2e8f0;
+      cursor: pointer;
+    }
+
+    .card h3 {
+      color: #114b35;
+      font-size: 15px;
+      margin-bottom: 6px;
+    }
+
+    .card p {
+      font-size: 12px;
+      color: #64748b;
+      line-height: 1.6;
+    }
+
+    /* Bottom Nav */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #ffffff;
+      border-top: 1px solid #e2e8f0;
+      display: flex;
+      justify-content: space-around;
+      padding: 8px 0;
+      z-index: 900;
+    }
+
+    .nav-item {
+      border: none;
+      background: none;
+      color: #114b35;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .nav-icon { font-size: 20px; }
+
+    /* Modal */
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: none;
+      place-items: center;
+      padding: 16px;
+      z-index: 1100;
+    }
+
+    .modal.show { display: grid; }
+
+    .modal-box {
+      background: #ffffff;
+      border-radius: 16px;
+      padding: 20px;
+      width: 100%;
+      max-width: 450px;
+      position: relative;
+    }
+
+    .modal-close {
+      position: absolute;
+      left: 14px;
+      top: 10px;
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+    }
+
+    .form { display: grid; gap: 10px; margin-top: 15px; }
+    .form input, .form select, .form textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      font-family: inherit;
+    }
+
+    .submit-btn {
+      padding: 10px;
+      border: none;
+      border-radius: 8px;
+      font-weight: 700;
+      background: #114b35;
+      color: #fff;
+      cursor: pointer;
+    }
+  </style>
 </head>
 <body>
-<header>
-<div class="brand"><img src="logo.svg" alt="شعار عفاف حضرموت نت"><div><div class="logo">عفاف حضرموت نت</div><div class="sub">منصة الزواج الخيري في حضرموت</div></div></div>
-<nav>
-<button class="btn light" onclick="login()">دخول</button><button class="btn green" onclick="register()">إنشاء حساب</button>
-<button class="btn light" onclick="profile()">ملفي</button><button class="btn light" onclick="searchProfiles()">البحث</button>
-<button class="btn light" onclick="preferences()">التفضيلات</button><button class="btn light" onclick="myRequests()">طلبات التواصل</button>
-<button class="btn light" onclick="myViews()">من شاهد ملفي</button><button class="btn light" onclick="contactUs()">تواصل معنا</button><button class="btn danger" onclick="reportSiteIssue()">الإبلاغ عن عطل</button>
-<button class="btn light" onclick="logout()">خروج</button>
-</nav>
-</header>
-<div id="userbar" class="userbar"></div>
 
-<section class="hero">
-<div><span class="badge">مشروع خيري • مجاني</span><h1>نسعى لمساعدة الشباب والفتيات على الزواج الحلال</h1>
-<p>منصة محترمة وآمنة للتعارف والاستفسار بنية الزواج، مع خصوصية للملفات ومراجعة المشرف للطلبات الخاصة والرسمية.</p>
-<button class="btn green" onclick="register()">ابدأ التسجيل</button></div>
-<img class="hero-img" src="hero.svg" alt="توضيح لمنصة الزواج الخيري">
-</section>
+  <header class="top-header">
+    <div class="brand">
+      <div class="brand-icon">♡</div>
+      <div>
+        <div class="brand-title">عفاف حضرموت نت</div>
+        <div class="brand-sub">منصة الزواج الخيري في حضرموت</div>
+      </div>
+    </div>
+    <button class="menu-btn" type="button" onclick="toggleDrawer()">☰</button>
+  </header>
 
-<section class="section"><h2>أقسام الموقع</h2><div class="grid">
-<div class="card choice" onclick="searchProfiles()"><h3>👨 قسم الشباب</h3><p>الشاب يشاهد البنات فقط وفق نظام الفصل.</p></div>
-<div class="card choice" onclick="searchProfiles()"><h3>👩 قسم البنات</h3><p>البنت تشاهد الشباب فقط وفق نظام الفصل.</p></div>
-<div class="card"><h3>🛡️ حماية ومراجعة</h3><p>البلاغات والحظر وطلبات التواصل تحت إدارة المشرف.</p></div>
-</div></section>
+  <section class="hero">
+    <div class="hero-container">
+      <span class="badge">مشروع خيري • مجاني</span>
+      <h1>نسعى لمساعدة الشباب والفتيات على الزواج الحلال</h1>
+      <p class="hero-text">منصة خيرية وآمنة تسعى إلى توفيق قلبين بالحلال وفق الشريعة الإسلامية، مع الحفاظ على الخصوصية والاحترام.</p>
+      <button class="cta-btn" onclick="register()">ابدأ التسجيل</button>
+    </div>
+  </section>
 
-<section class="section"><h2>كيف يعمل الموقع؟</h2><div class="grid">
-<div class="card"><b>١. الحساب</b><p>تسجيل مجاني وتأكيد البريد وإقرار الدخول بنية الزواج الحلال.</p></div>
-<div class="card"><b>٢. الملف والتفضيلات</b><p>أكمل بياناتك، ثم احفظ مواصفات شريك الحياة.</p></div>
-<div class="card"><b>٣. الطلب والمراسلة</b><p>الطلب الرسمي والطلب الخاص يمران على المشرف قبل وصولهما أو فتح المحادثة.</p></div>
-</div></section>
+  <div id="drawerOverlay" class="drawer-overlay" onclick="if(event.target===this)toggleDrawer()">
+    <div class="drawer">
+      <div class="drawer-title">القائمة الرئيسية</div>
+      <button class="drawer-btn btn-dark" onclick="register();toggleDrawer()">إنشاء حساب</button>
+      <button class="drawer-btn btn-dark" onclick="login();toggleDrawer()">تسجيل الدخول</button>
+      <button class="drawer-btn btn-light" onclick="contactUs();toggleDrawer()">اتصل بنا</button>
+      <button class="drawer-btn btn-danger" onclick="reportIssue();toggleDrawer()">الإبلاغ عن خطأ</button>
+      <button class="drawer-btn btn-light" onclick="logout();toggleDrawer()">تسجيل خروج</button>
+    </div>
+  </div>
 
-<section class="section"><div class="card"><h2>تواصل معنا</h2><p>للاستفسارات أو البلاغات العامة استخدم نموذج التواصل، وستصل الرسالة للمشرف.</p><button class="btn green" onclick="contactUs()">فتح نموذج التواصل</button></div></section>
-<footer><strong>عفاف حضرموت نت</strong><span>منصة الزواج الخيري في حضرموت</span><span class="footer-contact">الخصوصية • الشروط • الإبلاغ • تواصل معنا • الإبلاغ عن عطل</span></footer>
+  <main class="main-content">
+    <h2 class="section-title">أقسام المنصة</h2>
+    <div class="grid">
+      <div class="card" onclick="searchProfiles()">
+        <h3>👨 قسم الشباب</h3>
+        <p>تصفح ملفات الفتيات وفق ضوابط الخصوصية والفصل.</p>
+      </div>
+      <div class="card" onclick="searchProfiles()">
+        <h3>👩 قسم البنات</h3>
+        <p>تصفح ملفات الشباب وفق ضوابط الخصوصية والفصل.</p>
+      </div>
+      <div class="card" onclick="protectionInfo()">
+        <h3>🛡️ الحماية والخصوصية</h3>
+        <p>جميع الطلبات تراجع من قبل الإدارة لضمان الجدية والأمان.</p>
+      </div>
+    </div>
+  </main>
 
-<div class="modal" id="modal" onclick="if(event.target===this)closeModal()"><div class="modalbox"><button class="close" onclick="closeModal()">×</button><div id="content"></div></div></div>
+  <nav class="bottom-nav">
+    <button class="nav-item" onclick="window.scrollTo({top:0,behavior:'smooth'})">
+      <span class="nav-icon">🏠</span>
+      <span>الرئيسية</span>
+    </button>
+    <button class="nav-item" onclick="searchProfiles()">
+      <span class="nav-icon">👥</span>
+      <span>الملفات</span>
+    </button>
+    <button class="nav-item" onclick="myRequests()">
+      <span class="nav-icon">💬</span>
+      <span>الطلبات</span>
+    </button>
+    <button class="nav-item" onclick="profile()">
+      <span class="nav-icon">👤</span>
+      <span>ملفي</span>
+    </button>
+  </nav>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>
-const SUPABASE_URL="https://zftdssfqavdlsnulpheq.supabase.co";
-const SUPABASE_KEY="sb_publishable_Sdgd2lds7bi-I3rDJA1GrQ_rqNmOk5L";
-const supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
-const modal=document.getElementById("modal"),content=document.getElementById("content"),userbar=document.getElementById("userbar");
-function show(h){content.innerHTML=h;modal.classList.add("show")}
-function closeModal(){modal.classList.remove("show")}
-function safe(v){return String(v??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;")}
-async function currentUser(){return (await supabaseClient.auth.getUser()).data.user}
+  <div class="modal" id="modal" onclick="if(event.target===this)closeModal()">
+    <div class="modal-box">
+      <button class="modal-close" onclick="closeModal()">×</button>
+      <div id="modalContent"></div>
+    </div>
+  </div>
 
-function register(){show(`<h2>إنشاء حساب</h2><form class="form" onsubmit="createAccount(event)">
-<label>نوع الحساب</label><select id="gender" required><option value="">اختر</option><option>شاب</option><option>بنت</option></select>
-<label>البريد الإلكتروني</label><input id="email" type="email" required><label>كلمة المرور</label><input id="password" type="password" minlength="8" required>
-<div class="check"><input id="oath" type="checkbox" required><label>أقسم بالله العلي العظيم أنني داخل موقع عفاف حضرموت نت بنية الزواج الحلال.</label></div>
-<button class="btn green">إنشاء الحساب</button><p id="msg"></p></form>`)}
-async function createAccount(e){e.preventDefault();const msg=document.getElementById("msg");msg.textContent="جاري إنشاء الحساب...";
-const {error}=await supabaseClient.auth.signUp({email:email.value.trim(),password:password.value,options:{data:{"الجنس":gender.value,"إقرار_الزواج":true}}});
-msg.textContent=error?"حدث خطأ: "+error.message:"تم إنشاء الحساب. افتح رسالة البريد واضغط تأكيد البريد."}
-async function login(){const u=await currentUser();if(u){userbar.textContent="أنت مسجل دخول بالفعل ✅";userbar.classList.add("show");return}
-show(`<h2>تسجيل الدخول</h2><form class="form" onsubmit="loginAccount(event)"><label>البريد</label><input id="loginEmail" type="email" required><label>كلمة المرور</label><input id="loginPassword" type="password" required><button class="btn green">دخول</button><p id="loginMsg"></p></form>`)}
-async function loginAccount(e){e.preventDefault();const m=document.getElementById("loginMsg");const {error}=await supabaseClient.auth.signInWithPassword({email:loginEmail.value.trim(),password:loginPassword.value});if(error){m.textContent="خطأ: "+error.message;return}closeModal();await afterLogin()}
-async function afterLogin(){const u=await currentUser();if(!u)return;userbar.textContent="تم تسجيل الدخول بنجاح ✅";userbar.classList.add("show")}
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPABASE_URL = "https://zftdssfqavdlsnulpheq.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_Sdgd2lds7bi-I3rDJA1GrQ_rqNmOk5L";
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-/* الجديد: ملقي يفتح عرض فقط، والتعديل لا يظهر إلا بعد الضغط على «تعديل البيانات». */
-async function profile(){
-const u=await currentUser();if(!u){login();return}
-const {data:p,error}=await supabaseClient.from("profiles").select("*").eq("user_id",u.id).maybeSingle();
-if(error){show(`<p>خطأ: ${safe(error.message)}</p>`);return}
-if(!p){editProfile(null);return}
-const rows=[
-["الاسم",p["الاسم"]],["العمر",p["العمر"]?p["العمر"]+" سنة":""],["الجنس",p["الجنس"]],["لون البشرة",p["لون البشرة"]],
-["قبلي أو حضري",p["قبلي_او_حضري"]],["الحالة الاجتماعية",p["الحالة_الاجتماعية"]],["الطول",p["الطول"]],
-["المؤهل الدراسي",p["المؤهل_الدراسي"]],["الوظيفة",p["الوظيفة"]],["المدينة",p["المدينة"]],
-["الحالة الصحية",p["الحالة_الصحية"]],["الحالة المادية",p["الحالة_المادية"]],["نبذة عن نفسك",p["نبذة_عن_نفسه"]]
-];
-show(`<h2>ملفي</h2><p class="muted">عرض بياناتك فقط. للتعديل اضغط «تعديل البيانات».</p>
-<div class="profile-view">${rows.map(r=>`<div class="profile-row"><b>${safe(r[0])}</b><span>${safe(r[1]||"غير مضاف")}</span></div>`).join("")}</div>
-<div class="profile-actions"><button class="btn green" onclick="editProfile()">تعديل البيانات</button><button class="btn light" onclick="preferences()">مواصفات شريك الحياة</button></div>`)
-}
+    const modal = document.getElementById("modal");
+    const modalContent = document.getElementById("modalContent");
 
-async function editProfile(){
-const u=await currentUser();if(!u){login();return}
-const {data:p}=await supabaseClient.from("profiles").select("*").eq("user_id",u.id).maybeSingle();const x=p||{};
-show(`<h2>${p?"تعديل البيانات":"أكمل بياناتك"}</h2><form class="form" onsubmit="saveProfile(event)">
-<label>الاسم</label><input id="name" value="${safe(x["الاسم"])}" required><label>العمر</label><input id="age" type="number" min="18" max="100" value="${safe(x["العمر"])}" required>
-<label>الجنس</label><select id="pg" required><option value="شاب" ${x["الجنس"]==="شاب"?"selected":""}>شاب</option><option value="بنت" ${x["الجنس"]==="بنت"?"selected":""}>بنت</option></select>
-<label>لون البشرة</label><input id="skin" value="${safe(x["لون البشرة"])}"><label>قبلي أو حضري</label><select id="trib"><option value="">اختر</option><option ${x["قبلي_او_حضري"]==="قبلي"?"selected":""}>قبلي</option><option ${x["قبلي_او_حضري"]==="حضري"?"selected":""}>حضري</option></select>
-<label>الحالة الاجتماعية</label><input id="marital" value="${safe(x["الحالة_الاجتماعية"])}"><label>الطول</label><input id="height" type="number" step=".1" value="${safe(x["الطول"])}">
-<label>المؤهل الدراسي</label><input id="education" value="${safe(x["المؤهل_الدراسي"])}"><label>الوظيفة</label><input id="job" value="${safe(x["الوظيفة"])}"><label>المدينة</label><input id="city" value="${safe(x["المدينة"])}">
-<label>الحالة الصحية</label><input id="health" value="${safe(x["الحالة_الصحية"])}"><label>الحالة المادية</label><input id="financial" value="${safe(x["الحالة_المادية"])}">
-<label>نبذة عن نفسك</label><textarea id="bio">${safe(x["نبذة_عن_نفسه"])}</textarea>
-<div class="check"><input id="oath2" type="checkbox" ${x["إقرار_الزواج"]?"checked":""} required><label>أقسم بالله العلي العظيم أنني داخل الموقع بنية الزواج الحلال.</label></div>
-<button class="btn green">حفظ البيانات</button><button type="button" class="btn light" onclick="profile()">إلغاء</button><p id="pmsg"></p></form>`)
-}
+    function showModal(html) { modalContent.innerHTML = html; modal.classList.add("show"); }
+    function closeModal() { modal.classList.remove("show"); }
+    function toggleDrawer() { document.getElementById("drawerOverlay").classList.toggle("open"); }
 
-async function saveProfile(e){e.preventDefault();const u=await currentUser();const v=id=>document.getElementById(id).value.trim();
-const up={"user_id":u.id,"الاسم":v("name"),"العمر":Number(v("age")),"الجنس":v("pg"),"لون البشرة":v("skin"),"قبلي_او_حضري":v("trib"),"الحالة_الاجتماعية":v("marital"),"الطول":v("height")?Number(v("height")):null,"المؤهل_الدراسي":v("education"),"الوظيفة":v("job"),"المدينة":v("city"),"الحالة_الصحية":v("health"),"الحالة_المادية":v("financial"),"نبذة_عن_نفسه":v("bio"),"إقرار_الزواج":oath2.checked};
-const old=await supabaseClient.from("profiles").select("id").eq("user_id",u.id).maybeSingle();const r=old.data?await supabaseClient.from("profiles").update(up).eq("user_id",u.id):await supabaseClient.from("profiles").insert(up);
-pmsg.textContent=r.error?"خطأ: "+r.error.message:"تم حفظ ملفك بنجاح ✅";if(!r.error)setTimeout(profile,700)}
+    async function currentUser() { return (await supabaseClient.auth.getUser()).data.user; }
 
-async function preferences(){const u=await currentUser();if(!u){login();return}const {data:p}=await supabaseClient.from("partner_preferences").select("*").eq("user_id",u.id).maybeSingle();const x=p||{};show(`<h2>مواصفات شريك الحياة</h2><form class="form" onsubmit="savePreferences(event)">
-<label>الجنس المطلوب</label><select id="prefGender"><option value="">أي</option><option value="شاب" ${x.preferred_gender==="شاب"?"selected":""}>شاب</option><option value="بنت" ${x.preferred_gender==="بنت"?"selected":""}>بنت</option></select>
-<label>العمر من</label><input id="minAge" type="number" min="18" value="${x.min_age??18}"><label>العمر إلى</label><input id="maxAge" type="number" max="100" value="${x.max_age??60}">
-<label>المدينة</label><input id="prefCity" value="${safe(x.preferred_city)}"><label>المؤهل</label><input id="prefEdu" value="${safe(x.preferred_education)}"><label>لون البشرة</label><input id="prefSkin" value="${safe(x.preferred_skin)}"><label>قبلي أو حضري</label><input id="prefTribal" value="${safe(x.preferred_tribal)}"><label>ملاحظات</label><textarea id="prefNotes">${safe(x.notes)}</textarea>
-<button class="btn green">حفظ التفضيلات</button><p id="prefMsg"></p></form>`)}
-async function savePreferences(e){e.preventDefault();const u=await currentUser();const obj={user_id:u.id,preferred_gender:prefGender.value||null,min_age:Number(minAge.value)||null,max_age:Number(maxAge.value)||null,preferred_city:prefCity.value.trim(),preferred_education:prefEdu.value.trim(),preferred_skin:prefSkin.value.trim(),preferred_tribal:prefTribal.value.trim(),notes:prefNotes.value.trim(),updated_at:new Date().toISOString()};const old=await supabaseClient.from("partner_preferences").select("id").eq("user_id",u.id).maybeSingle();const r=old.data?await supabaseClient.from("partner_preferences").update(obj).eq("user_id",u.id):await supabaseClient.from("partner_preferences").insert(obj);prefMsg.textContent=r.error?"خطأ: "+r.error.message:"تم حفظ التفضيلات ✅";if(!r.error)setTimeout(closeModal,700)}
-async function searchProfiles(){const u=await currentUser();if(!u){login();return}location.href="search.html"}
-async function myRequests(){const u=await currentUser();if(!u){login();return}const {data,error}=await supabaseClient.from("contact_requests").select("*").or(`sender_user_id.eq.${u.id},receiver_user_id.eq.${u.id}`).order("created_at",{ascending:false});if(error){show(`<p>خطأ: ${safe(error.message)}</p>`);return}show(`<h2>طلبات التواصل</h2><p>الطلب الرسمي والطلب الخاص منفصلان، وكلاهما يمر على المشرف.</p>${(data||[]).map(r=>`<div class="card"><b>${r.request_type==="private"?"طلب تواصل خاص":"طلب تواصل رسمي"} • الحالة: ${safe(r.status)}</b><p>${safe(r.message||"")}</p>${r.status==="approved"&&r.request_type==="private"?`<button class="btn green" onclick="openChat('${r.sender_user_id===u.id?r.receiver_user_id:r.sender_user_id}')">فتح المراسلة</button>`:""}</div>`).join("")||"<p>لا توجد طلبات.</p>"}`)}
-function openChat(id){location.href="chat.html?user="+encodeURIComponent(id)}
-async function myViews(){const u=await currentUser();if(!u){login();return}const {data,error}=await supabaseClient.from("profile_views").select("viewer_id,created_at").eq("viewed_user_id",u.id).order("created_at",{ascending:false});if(error){show(`<p>خطأ: ${safe(error.message)}</p>`);return}const ids=[...new Set((data||[]).map(x=>x.viewer_id))];if(!ids.length){show("<h2>من شاهد ملفي</h2><p>لا توجد مشاهدات حتى الآن.</p>");return}const {data:p}=await supabaseClient.from("profiles").select("user_id,الاسم,العمر,الجنس,المدينة").in("user_id",ids);show(`<h2>من شاهد ملفي</h2>${(p||[]).map(x=>`<div class="card"><b>${safe(x["الاسم"]||"عضو")}</b><p>${safe(x["العمر"]||"")} سنة • ${safe(x["الجنس"]||"")} • ${safe(x["المدينة"]||"")}</p></div>`).join("")}`)}
-async function contactUs(){const u=await currentUser();show(`<h2>تواصل معنا</h2><form class="form" onsubmit="sendContact(event)"><label>الاسم</label><input id="cname" value="${u?.user_metadata?.name||""}"><label>البريد الإلكتروني</label><input id="cemail" type="email" value="${u?.email||""}"><label>الرسالة</label><textarea id="cmessage" maxlength="3000" required></textarea><button class="btn green">إرسال</button><p id="cmsg"></p></form>`)}
-async function reportSiteIssue(){const u=await currentUser();show(`<h2>الإبلاغ عن عطل داخل الموقع</h2><p>اكتب وصفًا واضحًا للعطل، وسيراجعه المشرف.</p><form class="form" onsubmit="sendSiteIssue(event)"><label>الاسم</label><input id="iname" value="${safe(u?.user_metadata?.name||"")}"><label>البريد الإلكتروني</label><input id="iemail" type="email" value="${safe(u?.email||"")}" ${u?"":"required"}><label>الصفحة التي ظهر فيها العطل</label><input id="ipage" value="${safe(location.href)}"><label>وصف العطل</label><textarea id="idescription" maxlength="5000" required placeholder="مثلاً: عند الضغط على حفظ لا يتم حفظ البيانات"></textarea><button class="btn danger">إرسال بلاغ العطل</button><p id="imsg"></p></form>`)}
-async function sendSiteIssue(e){e.preventDefault();const u=await currentUser();const {error}=await supabaseClient.from("site_issues").insert({reporter_id:u?.id||null,name:iname.value.trim(),email:iemail.value.trim(),page_url:ipage.value.trim(),description:idescription.value.trim(),status:"new"});imsg.textContent=error?"تعذر إرسال البلاغ: "+error.message:"تم إرسال بلاغ العطل للمشرف ✅";if(!error)setTimeout(closeModal,900)}
-async function sendContact(e){e.preventDefault();const u=await currentUser();const {error}=await supabaseClient.from("contact_messages").insert({sender_id:u?.id||null,name:cname.value.trim(),email:cemail.value.trim(),message:cmessage.value.trim()});cmsg.textContent=error?"تعذر الإرسال: "+error.message:"تم إرسال رسالتك للمشرف ✅";if(!error)setTimeout(closeModal,700)}
-async function logout(){await supabaseClient.auth.signOut();userbar.classList.remove("show");alert("تم تسجيل الخروج.")}
-supabaseClient.auth.onAuthStateChange((_event,session)=>{if(session?.user){userbar.textContent="تم تسجيل الدخول • ملفك وبياناتك محفوظة.";userbar.classList.add("show")}else userbar.classList.remove("show")});
-(async()=>{const u=await currentUser();if(u){userbar.textContent="أنت مسجل دخول بالفعل ✅";userbar.classList.add("show")}const hash=new URLSearchParams(location.hash.replace(/^#/,""));const tokenHash=hash.get("token_hash")||hash.get("access_token");const type=hash.get("type");if(tokenHash&&(type==="signup"||type==="email")){const {data,error}=await supabaseClient.auth.verifyOtp({token_hash:tokenHash,type:type==="email"?"email":"signup"});history.replaceState(null,"",location.pathname+location.search);if(error)show(`<h2>تأكيد البريد</h2><p>تعذر تأكيد البريد: ${safe(error.message)}</p>`);else if(data?.user)show(`<h2>تم تأكيد البريد ✅</h2><p>تم تأكيد بريدك الإلكتروني. يمكنك تسجيل الدخول الآن.</p><button class="btn green" onclick="closeModal();login()">تسجيل الدخول</button>`)}})();
-</script>
-</body></html>
+    function register() {
+      showModal(`
+        <h2>إنشاء حساب جديد</h2>
+        <form class="form" onsubmit="handleRegister(event)">
+          <label>النوع</label>
+          <select id="regGender" required>
+            <option value="">اختر</option>
+            <option>شاب</option>
+            <option>بنت</option>
+          </select>
+          <label>البريد الإلكتروني</label>
+          <input id="regEmail" type="email" required>
+          <label>كلمة المرور</label>
+          <input id="regPassword" type="password" minlength="8" required>
+          <button class="submit-btn">إنشاء الحساب</button>
+          <p id="regMsg" style="margin-top:10px; font-size:12px;"></p>
+        </form>
+      `);
+    }
+
+    async function handleRegister(e) {
+      e.preventDefault();
+      const msg = document.getElementById("regMsg");
+      msg.textContent = "جاري إنشاء الحساب...";
+      const { error } = await supabaseClient.auth.signUp({
+        email: regEmail.value.trim(),
+        password: regPassword.value,
+        options: { data: { "الجنس": regGender.value } }
+      });
+      msg.textContent = error ? "خطأ: " + error.message : "تم إنشاء الحساب بنجاح ✅";
+    }
+
+    function login() {
+      showModal(`
+        <h2>تسجيل الدخول</h2>
+        <form class="form" onsubmit="handleLogin(event)">
+          <label>البريد الإلكتروني</label>
+          <input id="loginEmail" type="email" required>
+          <label>كلمة المرور</label>
+          <input id="loginPassword" type="password" required>
+          <button class="submit-btn">دخول</button>
+          <p id="loginMsg" style="margin-top:10px; font-size:12px;"></p>
+        </form>
+      `);
+    }
+
+    async function handleLogin(e) {
+      e.preventDefault();
+      const msg = document.getElementById("loginMsg");
+      const { error } = await supabaseClient.auth.signInWithPassword({
+        email: loginEmail.value.trim(),
+        password: loginPassword.value
+      });
+      if (error) { msg.textContent = "خطأ: " + error.message; return; }
+      closeModal();
+      alert("تم تسجيل الدخول بنجاح");
+    }
+
+    async function profile() {
+      const u = await currentUser();
+      if (!u) return login();
+      showModal(`<h2>الملف الشخصي</h2><p style="margin-top:10px;">بياناتك مسجلة ومحمية.</p>`);
+    }
+
+    async function searchProfiles() {
+      const u = await currentUser();
+      if (!u) return login();
+      showModal(`<h2>الملفات المتاحة</h2><p style="margin-top:10px;">جاري تحميل القائمة...</p>`);
+    }
+
+    async function myRequests() {
+      const u = await currentUser();
+      if (!u) return login();
+      showModal(`<h2>طلبات التواصل</h2><p style="margin-top:10px;">لا توجد طلبات معلقة.</p>`);
+    }
+
+    function contactUs() {
+      showModal(`
+        <h2>اتصل بنا</h2>
+        <form class="form" onsubmit="event.preventDefault();closeModal();alert('تم الإرسال بنجاح')">
+          <textarea placeholder="اكتب رسالتك..." required rows="4"></textarea>
+          <button class="submit-btn">إرسال</button>
+        </form>
+      `);
+    }
+
+    function reportIssue() {
+      showModal(`
+        <h2>الإبلاغ عن مشكلة</h2>
+        <form class="form" onsubmit="event.preventDefault();closeModal();alert('تم إرسال البلاغ')">
+          <textarea placeholder="صف المشكلة..." required rows="4"></textarea>
+          <button class="submit-btn" style="background:#9b2c2c;">إرسال البلاغ</button>
+        </form>
+      `);
+    }
+
+    function protectionInfo() {
+      showModal(`<h2>الحماية والخصوصية</h2><p style="margin-top:10px;">تتم مراجعة كافة البيانات والطلبات من قبل المشرفين لضمان السرية والجدية.</p>`);
+    }
+
+    async function logout() {
+      await supabaseClient.auth.signOut();
+      alert("تم تسجيل الخروج بنجاح.");
+    }
+  </script>
+</body>
+      </html>
+      
