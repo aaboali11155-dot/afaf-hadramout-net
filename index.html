@@ -485,7 +485,7 @@
       e.preventDefault();
       const msg = document.getElementById("loginMsg");
 
-      const { error } = await supabaseClient.auth.signInWithPassword({
+      const { data, error } = await supabaseClient.auth.signInWithPassword({
         email: document.getElementById("loginEmail").value.trim(),
         password: document.getElementById("loginPassword").value
       });
@@ -496,7 +496,28 @@
       }
 
       closeModal();
-      alert("تم تسجيل الدخول بنجاح");
+
+      // بعد تسجيل الدخول نوجّه المستخدم تلقائيًا إلى القسم المناسب لجنسه.
+      const u = data?.user;\n      const gender = u?.user_metadata?.["الجنس"] || u?.user_metadata?.gender || "";
+
+      if (gender === "شاب") {
+        showModal(`
+          <h2>ملفات البنات 👩</h2>
+          <p style="margin-top:10px;">هذه الملفات مخصصة للشاب المسجل.</p>
+          <p style="margin-top:8px; color:#64748b;">سيتم عرض الملفات المتاحة وفق ضوابط الخصوصية والمراجعة.</p>
+        `);
+      } else if (gender === "بنت") {
+        showModal(`
+          <h2>ملفات الشباب 👨</h2>
+          <p style="margin-top:10px;">هذه الملفات مخصصة للبنت المسجلة.</p>
+          <p style="margin-top:8px; color:#64748b;">سيتم عرض الملفات المتاحة وفق ضوابط الخصوصية والمراجعة.</p>
+        `);
+      } else {
+        showModal(`
+          <h2>تم تسجيل الدخول بنجاح ✅</h2>
+          <p style="margin-top:10px;">لم نتمكن من تحديد نوع الحساب. يمكنك اختيار القسم من الملفات.</p>
+        `);
+      }
     }
 
     async function profile() {
