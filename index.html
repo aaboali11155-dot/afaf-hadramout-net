@@ -6,13 +6,13 @@
   <title>عفاف حضرموت نت</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap');
-    
+
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
     }
-    
+
     body {
       font-family: 'Cairo', sans-serif;
       background-color: #f4f8f6;
@@ -21,7 +21,6 @@
       overflow-x: hidden;
     }
 
-    /* Header */
     .top-header {
       background: #114b35;
       padding: 12px 16px;
@@ -69,7 +68,6 @@
       line-height: 1;
     }
 
-    /* Hero */
     .hero {
       background: linear-gradient(180deg, #114b35 0%, #1c684d 100%);
       padding: 30px 16px 40px;
@@ -121,7 +119,6 @@
       cursor: pointer;
     }
 
-    /* Side Drawer */
     .drawer-overlay {
       position: fixed;
       inset: 0;
@@ -181,7 +178,6 @@
     .btn-light { background: #edf5f1; color: #114b35; }
     .btn-danger { background: #fde8e8; color: #9b2c2c; }
 
-    /* Content Cards */
     .main-content {
       max-width: 600px;
       margin: 0 auto;
@@ -220,7 +216,6 @@
       line-height: 1.6;
     }
 
-    /* Bottom Nav */
     .bottom-nav {
       position: fixed;
       bottom: 0;
@@ -249,7 +244,6 @@
 
     .nav-icon { font-size: 20px; }
 
-    /* Modal */
     .modal {
       position: fixed;
       inset: 0;
@@ -282,6 +276,7 @@
     }
 
     .form { display: grid; gap: 10px; margin-top: 15px; }
+
     .form input, .form select, .form textarea {
       width: 100%;
       padding: 10px;
@@ -298,6 +293,11 @@
       background: #114b35;
       color: #fff;
       cursor: pointer;
+    }
+
+    .submit-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
     }
   </style>
 </head>
@@ -387,11 +387,22 @@
     const modal = document.getElementById("modal");
     const modalContent = document.getElementById("modalContent");
 
-    function showModal(html) { modalContent.innerHTML = html; modal.classList.add("show"); }
-    function closeModal() { modal.classList.remove("show"); }
-    function toggleDrawer() { document.getElementById("drawerOverlay").classList.toggle("open"); }
+    function showModal(html) {
+      modalContent.innerHTML = html;
+      modal.classList.add("show");
+    }
 
-    async function currentUser() { return (await supabaseClient.auth.getUser()).data.user; }
+    function closeModal() {
+      modal.classList.remove("show");
+    }
+
+    function toggleDrawer() {
+      document.getElementById("drawerOverlay").classList.toggle("open");
+    }
+
+    async function currentUser() {
+      return (await supabaseClient.auth.getUser()).data.user;
+    }
 
     function register() {
       showModal(`
@@ -407,7 +418,7 @@
           <input id="regEmail" type="email" required>
           <label>كلمة المرور</label>
           <input id="regPassword" type="password" minlength="8" required>
-          <button class="submit-btn">إنشاء الحساب</button>
+          <button id="registerBtn" class="submit-btn" type="submit">إنشاء الحساب</button>
           <p id="regMsg" style="margin-top:10px; font-size:12px;"></p>
         </form>
       `);
@@ -415,14 +426,45 @@
 
     async function handleRegister(e) {
       e.preventDefault();
+
       const msg = document.getElementById("regMsg");
+      const btn = document.getElementById("registerBtn");
+
       msg.textContent = "جاري إنشاء الحساب...";
-      const { error } = await supabaseClient.auth.signUp({
-        email: regEmail.value.trim(),
-        password: regPassword.value,
-        options: { data: { "الجنس": regGender.value } }
-      });
-      msg.textContent = error ? "خطأ: " + error.message : "تم إنشاء الحساب بنجاح ✅";
+      btn.disabled = true;
+
+      try {
+        const gender = document.getElementById("regGender").value;
+        const email = document.getElementById("regEmail").value.trim();
+        const password = document.getElementById("regPassword").value;
+
+        const { error } = await supabaseClient.auth.signUp({
+          email: email,
+          password: password,
+          options: {
+            data: { "الجنس": gender }
+          }
+        });
+
+        if (error) {
+          msg.textContent = "خطأ: " + error.message;
+          btn.disabled = false;
+          return;
+        }
+
+        msg.textContent = "تم إنشاء الحساب بنجاح ✅";
+
+        // إصلاح الخلل: بعد نجاح التسجيل لا تبقى النافذة معلقة.
+        setTimeout(() => {
+          closeModal();
+          alert("تم إنشاء الحساب بنجاح ✅");
+        }, 1200);
+
+      } catch (err) {
+        msg.textContent = "حدث خطأ غير متوقع. حاول مرة أخرى.";
+        btn.disabled = false;
+        console.error(err);
+      }
     }
 
     function login() {
@@ -433,7 +475,7 @@
           <input id="loginEmail" type="email" required>
           <label>كلمة المرور</label>
           <input id="loginPassword" type="password" required>
-          <button class="submit-btn">دخول</button>
+          <button class="submit-btn" type="submit">دخول</button>
           <p id="loginMsg" style="margin-top:10px; font-size:12px;"></p>
         </form>
       `);
@@ -442,11 +484,17 @@
     async function handleLogin(e) {
       e.preventDefault();
       const msg = document.getElementById("loginMsg");
+
       const { error } = await supabaseClient.auth.signInWithPassword({
-        email: loginEmail.value.trim(),
-        password: loginPassword.value
+        email: document.getElementById("loginEmail").value.trim(),
+        password: document.getElementById("loginPassword").value
       });
-      if (error) { msg.textContent = "خطأ: " + error.message; return; }
+
+      if (error) {
+        msg.textContent = "خطأ: " + error.message;
+        return;
+      }
+
       closeModal();
       alert("تم تسجيل الدخول بنجاح");
     }
@@ -474,7 +522,7 @@
         <h2>اتصل بنا</h2>
         <form class="form" onsubmit="event.preventDefault();closeModal();alert('تم الإرسال بنجاح')">
           <textarea placeholder="اكتب رسالتك..." required rows="4"></textarea>
-          <button class="submit-btn">إرسال</button>
+          <button class="submit-btn" type="submit">إرسال</button>
         </form>
       `);
     }
@@ -484,7 +532,7 @@
         <h2>الإبلاغ عن مشكلة</h2>
         <form class="form" onsubmit="event.preventDefault();closeModal();alert('تم إرسال البلاغ')">
           <textarea placeholder="صف المشكلة..." required rows="4"></textarea>
-          <button class="submit-btn" style="background:#9b2c2c;">إرسال البلاغ</button>
+          <button class="submit-btn" type="submit" style="background:#9b2c2c;">إرسال البلاغ</button>
         </form>
       `);
     }
@@ -499,5 +547,4 @@
     }
   </script>
 </body>
-      </html>
-      
+</html>
