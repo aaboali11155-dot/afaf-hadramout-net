@@ -506,6 +506,34 @@ async function currentUser() {
 
 async function checkEmailConfirmation() {
 
+  const url =
+    new URL(window.location.href);
+
+  const code =
+    url.searchParams.get("code");
+
+  if (code) {
+
+    const { error } =
+      await supabaseClient.auth.exchangeCodeForSession(code);
+
+    if (error) {
+
+      console.error(
+        "خطأ في تأكيد البريد:",
+        error.message
+      );
+
+      return;
+    }
+
+    window.history.replaceState(
+      {},
+      document.title,
+      window.location.pathname
+    );
+  }
+
   const result =
     await supabaseClient.auth.getSession();
 
@@ -518,30 +546,89 @@ async function checkEmailConfirmation() {
 
     if (confirmed) {
 
-      showModal(`
-        <div style="text-align:center;">
+      const user =
+        session.user;
 
-          <div style="font-size:45px;">
-            ✅
+      const gender =
+        user.user_metadata?.["الجنس"] ||
+        user.user_metadata?.gender ||
+        "";
+
+      closeModal();
+
+      if (gender === "شاب") {
+
+        showModal(`
+          <div style="text-align:center;">
+
+            <div style="font-size:45px;">
+              👩
+            </div>
+
+            <h2 style="color:#114b35;margin-top:10px;">
+              ملفات البنات
+            </h2>
+
+            <p style="margin-top:12px;line-height:1.8;">
+              تم تأكيد بريدك وتسجيل دخولك تلقائيًا ✅
+            </p>
+
+            <p style="margin-top:8px;color:#64748b;">
+              هذه الملفات مخصصة للشاب المسجل.
+            </p>
+
           </div>
+        `);
 
-          <h2 style="color:#114b35;margin-top:10px;">
-            تم تأكيد البريد الإلكتروني
-          </h2>
+      }
 
-          <p style="margin-top:12px;line-height:1.8;">
-            تم تفعيل حسابك بنجاح.
-          </p>
+      else if (gender === "بنت") {
 
-          <button
-            class="submit-btn"
-            style="margin-top:18px;width:100%;"
-            onclick="closeModal()">
-            متابعة
-          </button>
+        showModal(`
+          <div style="text-align:center;">
 
-        </div>
-      `);
+            <div style="font-size:45px;">
+              👨
+            </div>
+
+            <h2 style="color:#114b35;margin-top:10px;">
+              ملفات الشباب
+            </h2>
+
+            <p style="margin-top:12px;line-height:1.8;">
+              تم تأكيد بريدك وتسجيل دخولك تلقائيًا ✅
+            </p>
+
+            <p style="margin-top:8px;color:#64748b;">
+              هذه الملفات مخصصة للبنت المسجلة.
+            </p>
+
+          </div>
+        `);
+
+      }
+
+      else {
+
+        showModal(`
+          <div style="text-align:center;">
+
+            <div style="font-size:45px;">
+              ✅
+            </div>
+
+            <h2 style="color:#114b35;margin-top:10px;">
+              تم تسجيل الدخول تلقائيًا
+            </h2>
+
+            <p style="margin-top:12px;">
+              تم تأكيد البريد بنجاح.
+            </p>
+
+          </div>
+        `);
+
+      }
 
     }
   }
