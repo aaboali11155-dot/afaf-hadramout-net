@@ -20,6 +20,34 @@ const PUBLIC_PROFILE_COLUMNS = `
   نبذة_عن_نفسه
 `;
 
+const ADMIN_PROFILE_COLUMNS = `
+  id,
+  user_id,
+  created_at,
+  الاسم,
+  العمر,
+  الجنس,
+  gender,
+  المدينة,
+  الحالة_الاجتماعية,
+  المؤهل_الدراسي,
+  الوظيفة,
+  الطول,
+  "لون البشرة",
+  لون_البشرة,
+  قبلي_او_حضري,
+  مستوى_التدين,
+  الحالة_الصحية,
+  الحالة_المادية,
+  نبذة_عن_نفسه,
+  إقرار_الزواج,
+  is_admin,
+  admin_role,
+  admin_permissions,
+  account_status,
+  is_hidden
+`;
+
 async function attachPartnerPreference(profile) {
   if (!profile?.id) return profile;
   const { data, error } = await supabase
@@ -55,7 +83,7 @@ export async function fetchProfileByUserId(userId) {
 export async function fetchProfileById(id, { admin = false } = {}) {
   let query = supabase
     .from('profiles')
-    .select(PUBLIC_PROFILE_COLUMNS)
+    .select(admin ? ADMIN_PROFILE_COLUMNS : PUBLIC_PROFILE_COLUMNS)
     .eq('id', id);
   if (!admin) {
     query = query.eq('account_status', 'active').eq('is_hidden', false);

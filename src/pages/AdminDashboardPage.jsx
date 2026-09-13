@@ -476,7 +476,7 @@ export default function AdminDashboardPage({ currentUser }) {
                   <div className="mt-3 flex items-center justify-between gap-2">
                     <span className="text-xs text-gray-500">{formatDate(profile.created_at)}</span>
                     {!profile.is_admin ? (
-                      {adminState.isOwner && <button onClick={() => { setAdminModalUser(profile); setSelectedAdminPermissions([]); }} className="rounded-lg bg-brand-50 p-2 text-brand-600 hover:bg-brand-100" title="إضافة مشرف بصلاحيات محددة"><Shield size={16} /></button>}
+                      adminState.isOwner && <button onClick={() => { setAdminModalUser(profile); setSelectedAdminPermissions([]); }} className="rounded-lg bg-brand-50 p-2 text-brand-600 hover:bg-brand-100" title="إضافة مشرف بصلاحيات محددة"><Shield size={16} /></button>
                     ) : (
                       <button onClick={() => handleRevokeAdmin(profile.user_id)} className="rounded-lg bg-red-50 p-2 text-red-600 hover:bg-red-100" title="إلغاء الصلاحية"><Unlock size={16} /></button>
                     )}
@@ -540,7 +540,7 @@ export default function AdminDashboardPage({ currentUser }) {
                           >
                             <Unlock size={16} />
                           </button>
-                        )}
+                        ) : null}
                       </div>
                     </td>
                   </tr>
