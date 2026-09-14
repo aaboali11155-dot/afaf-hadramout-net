@@ -1,6 +1,14 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Heart, Shield, Search, MessageSquare, Users, Lock, Mail, Instagram, Info, Lightbulb } from 'lucide-react';
+import { Heart, Shield, Search, MessageSquare, Users, Lock, Mail, Info, Lightbulb } from 'lucide-react';
+
+const InstagramIcon = ({ size = 17 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <rect x="3" y="3" width="18" height="18" rx="5" stroke="currentColor" strokeWidth="2" />
+    <circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="2" />
+    <circle cx="17.5" cy="6.5" r="1" fill="currentColor" />
+  </svg>
+);
 
 export default function HomePage({ currentUser }) {
   return (
@@ -161,7 +169,7 @@ export default function HomePage({ currentUser }) {
               afafhadramout@gmail.com
             </a>
             <a href="https://www.instagram.com/afafhadramout" target="_blank" rel="noreferrer" className="flex items-center gap-2 text-sm text-gray-600 transition-colors hover:text-brand-600">
-              <Instagram size={17} />
+              <InstagramIcon size={17} />
               @afafhadramout
             </a>
           </div>
