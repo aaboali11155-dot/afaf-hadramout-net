@@ -29,7 +29,7 @@ export async function setUserAdminRole(userId, { isAdmin, adminRole = null, admi
   }
   const { data, error } = await supabase
     .from('profiles')
-    .update({ is_admin: isAdmin, admin_role: adminRole, admin_permissions: isAdmin ? adminPermissions : [], account_status: 'active' })
+    .update({ is_admin: isAdmin, admin_role: adminRole, admin_permissions: isAdmin ? adminPermissions : [] })
     .eq('user_id', userId)
     .select()
     .single();

@@ -13,6 +13,8 @@ import {
   EyeOff,
   CheckCircle2,
   Ban,
+  MessageSquare,
+  X,
 } from 'lucide-react';
 import { fetchProfileById, updateProfile } from '../services/profileService';
 
@@ -22,6 +24,9 @@ export default function AdminProfileDetailPage({ currentUser }) {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [messageOpen, setMessageOpen] = useState(false);
+  const [messageText, setMessageText] = useState('');
+  const [messageSending, setMessageSending] = useState(false);
 
   useEffect(() => {
     if (!currentUser?.isAdmin) {
@@ -47,6 +52,22 @@ export default function AdminProfileDetailPage({ currentUser }) {
       setProfile((prev) => ({ ...prev, account_status: accountStatus }));
     } catch (err) {
       setError(err.message || 'تعذر تحديث حالة الملف');
+    }
+  };
+
+  const handleSendMessage = async () => {
+    const text = messageText.trim();
+    if (!text || !profile?.user_id) return;
+    setMessageSending(true);
+    try {
+      const { sendAdminMessage } = await import('../services/adminMessageService');
+      await sendAdminMessage({ receiverUserId: profile.user_id, content: text });
+      setMessageText('');
+      setMessageOpen(false);
+    } catch (err) {
+      setError(err.message || 'تعذر إرسال الرسالة');
+    } finally {
+      setMessageSending(false);
     }
   };
 
@@ -87,6 +108,7 @@ export default function AdminProfileDetailPage({ currentUser }) {
   const valueClass = 'font-semibold text-gray-900';
 
   return (
+    <>
     <div className="container mx-auto px-4 py-8" dir="rtl">
       <div className="mb-6 flex flex-wrap gap-2">
         <button
@@ -109,6 +131,13 @@ export default function AdminProfileDetailPage({ currentUser }) {
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => setMessageOpen(true)}
+            className="flex items-center gap-2 rounded-xl bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700"
+          >
+            <MessageSquare size={16} /> إرسال رسالة
+          </button>
           {profile.is_hidden ? (
             <>
               <button
@@ -282,5 +311,35 @@ export default function AdminProfileDetailPage({ currentUser }) {
         </div>
       </div>
     </div>
+
+      {messageOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" role="dialog" aria-modal="true">
+          <div className="w-full max-w-lg rounded-3xl bg-white p-5 shadow-2xl">
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <div>
+                <h2 className="text-lg font-bold text-gray-900">إرسال رسالة</h2>
+                <p className="mt-1 text-sm text-gray-500">إلى: {profile.الاسم || 'المستخدم'}</p>
+              </div>
+              <button type="button" onClick={() => setMessageOpen(false)} className="rounded-xl bg-gray-100 p-2 text-gray-600 hover:bg-gray-200" aria-label="إغلاق">
+                <X size={18} />
+              </button>
+            </div>
+            <textarea
+              value={messageText}
+              onChange={(e) => setMessageText(e.target.value)}
+              className="min-h-[130px] w-full rounded-2xl border border-gray-200 p-3 text-sm outline-none focus:border-brand-500"
+              placeholder="اكتب الرسالة..."
+              autoFocus
+            />
+            <div className="mt-4 flex gap-2">
+              <button type="button" onClick={() => setMessageOpen(false)} className="flex-1 rounded-xl bg-gray-100 px-4 py-2 font-semibold text-gray-700">إلغاء</button>
+              <button type="button" onClick={handleSendMessage} disabled={!messageText.trim() || messageSending} className="btn-primary flex-1 disabled:cursor-not-allowed disabled:opacity-50">
+                {messageSending ? 'جارٍ الإرسال...' : 'إرسال'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }

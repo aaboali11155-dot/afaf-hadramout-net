@@ -30,8 +30,8 @@ export async function logAdminAction({ action, entityType, entityId, details = '
     .insert({
       admin_user_id: user.id,
       action,
-      target_type: entityType,
-      target_id: entityId,
+      entity_type: entityType,
+      entity_id: entityId,
       details: typeof details === 'string' ? { message: details } : (details || {}),
     })
     .select()

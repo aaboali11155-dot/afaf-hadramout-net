@@ -33,6 +33,57 @@ export async function fetchAllContactRequests() {
   return attachNames(data || []);
 }
 
+
+
+/**
+ * Groups contact requests by the other user's ID.
+ * The newest request is used as the card's representative fields, while
+ * every request is kept in `requests` for the conversation/history view.
+ */
+export function groupContactRequests(data, currentUserId) {
+  const groups = new Map();
+
+  for (const request of data || []) {
+    const otherUserId = request.sender_user_id === currentUserId
+      ? request.receiver_user_id
+      : request.sender_user_id;
+    if (!otherUserId) continue;
+
+    const existing = groups.get(otherUserId);
+    if (!existing) {
+      groups.set(otherUserId, {
+        ...request,
+        id: `contact-group-${otherUserId}`,
+        other_user_id: otherUserId,
+        request_ids: [request.id],
+        requests: [request],
+        latest_request: request,
+      });
+      continue;
+    }
+
+    existing.request_ids.push(request.id);
+    existing.requests.push(request);
+    if (new Date(request.created_at || 0) > new Date(existing.latest_request?.created_at || 0)) {
+      const history = existing.requests;
+      const requestIds = existing.request_ids;
+      const latest = request;
+      groups.set(otherUserId, {
+        ...request,
+        id: `contact-group-${otherUserId}`,
+        other_user_id: otherUserId,
+        request_ids: requestIds,
+        requests: history,
+        latest_request: latest,
+      });
+    }
+  }
+
+  return [...groups.values()].sort(
+    (a, b) => new Date(b.latest_request?.created_at || 0) - new Date(a.latest_request?.created_at || 0)
+  );
+}
+
 export async function sendContactRequest(request) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('يجب تسجيل الدخول');

@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { formatAuditLogRow } from '../lib/adminAuditLogFormatter';
+
 import { useNavigate } from 'react-router-dom';
 import {
   Users,
@@ -28,6 +30,7 @@ import { makeAdmin, revokeAdmin, getAdminPermissionState, ADMIN_PERMISSIONS } fr
 import { fetchAllUserBlocks, unblockUser } from '../services/adminBlockService';
 import { fetchAllMessages, updateMessageStatus } from '../services/messageService';
 import { fetchAdminAuditLog, logAdminAction } from '../services/adminAuditService';
+import { supabase } from '../lib/supabase';
 
 export default function AdminDashboardPage({ currentUser }) {
   const navigate = useNavigate();
@@ -42,9 +45,20 @@ export default function AdminDashboardPage({ currentUser }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [selectedReportId, setSelectedReportId] = useState(null);
+  const [statFilter, setStatFilter] = useState(null);
   const [adminState, setAdminState] = useState({ isOwner: currentUser?.adminRole === 'owner', moderatorCount: 0, permissions: [] });
   const [adminModalUser, setAdminModalUser] = useState(null);
   const [selectedAdminPermissions, setSelectedAdminPermissions] = useState([]);
+  const [reportAction, setReportAction] = useState('');
+  const [reportActionMessage, setReportActionMessage] = useState('');
+  const [reportActionBusy, setReportActionBusy] = useState(false);
+  const [auditAdminNameMap, setAuditAdminNameMap] = useState({});
+  const [auditUserNameMap, setAuditUserNameMap] = useState({});
+
+  const [siteIssueStatusFilter, setSiteIssueStatusFilter] = useState('open');
+  const [selectedSiteIssue, setSelectedSiteIssue] = useState(null);
+  const [siteIssueUpdating, setSiteIssueUpdating] = useState(false);
+
 
   useEffect(() => {
     if (!currentUser?.isAdmin) return;
@@ -55,11 +69,12 @@ export default function AdminDashboardPage({ currentUser }) {
           fetchAllContactRequests().catch(() => []),
           fetchAllMessages().catch(() => []),
           fetchAllSiteIssues().catch(() => []),
-          fetchAllUserReports().catch(() => []),
+          fetchAllUserReports().catch((err) => { throw new Error(`تعذر تحميل بلاغات المستخدمين: ${err.message || err}`); }),
           fetchAllUserBlocks().catch(() => []),
           fetchAdminAuditLog().catch(() => []),
         ]);
         setProfiles(p || []); setRequests(r || []); setMessages(m || []); setIssues(i || []); setReports(rep || []); setBlocks(b || []); setAuditLogs(a || []);
+      loadAuditDisplayData(a || []);
       } catch (err) {
         setError(err.message || 'تعذر تحميل بيانات لوحة التحكم');
       } finally {
@@ -68,6 +83,22 @@ export default function AdminDashboardPage({ currentUser }) {
     }
     loadData();
   }, [currentUser?.isAdmin]);
+
+  useEffect(() => {
+    if (!currentUser?.isAdmin || activeTab !== 'reports') return;
+    let cancelled = false;
+    const refreshReports = async () => {
+      try {
+        const data = await fetchAllUserReports();
+        if (!cancelled) setReports(data || []);
+      } catch (err) {
+        if (!cancelled) setError(err.message || 'تعذر تحديث بلاغات المستخدمين');
+      }
+    };
+    refreshReports();
+    const timer = window.setInterval(refreshReports, 10000);
+    return () => { cancelled = true; window.clearInterval(timer); };
+  }, [currentUser?.isAdmin, activeTab]);
 
   useEffect(() => {
     if (currentUser?.isAdmin) {
@@ -176,20 +207,77 @@ export default function AdminDashboardPage({ currentUser }) {
     }
   };
 
+  const handleReportAdminAction = async (report, action) => {
+    if (!can('reports')) return setError('ليست لديك صلاحية بلاغات المستخدمين');
+    if (!report?.id || !action) return setError('يجب تحديد الإجراء قبل إنهاء البلاغ');
+    if (action === 'message' && !reportActionMessage.trim()) return setError('اكتب الرسالة قبل إرسالها');
+    setReportActionBusy(true);
+    try {
+      const targetUserId = report.reported_user_id;
+      const labels = {
+        warning: 'إرسال تحذير',
+        message: 'إرسال رسالة مباشرة',
+        hide_profile: 'إخفاء الملف الشخصي',
+        suspend: 'تعليق الحساب',
+        ban: 'حظر الحساب نهائيًا',
+        ignore: 'تجاهل البلاغ (لا يستدعي إجراء)',
+      };
+      if (action === 'message') {
+        const { data: auth } = await supabase.auth.getUser();
+        if (!auth?.user?.id) throw new Error('يجب تسجيل الدخول');
+        const { error } = await supabase.from('messages').insert({
+          sender_id: auth.user.id,
+          receiver_id: targetUserId,
+          body: reportActionMessage.trim(),
+          status: 'approved',
+        });
+        if (error) throw error;
+      } else if (action === 'warning') {
+        const { error } = await supabase.from('notifications').insert({
+          user_id: targetUserId, title: 'تنبيه من إدارة الموقع', body: 'تم تسجيل تنبيه على حسابك بسبب بلاغ تمت مراجعته من الإدارة.', type: 'warning', is_read: false
+        });
+        if (error) throw error;
+      } else if (action === 'hide_profile' || action === 'suspend' || action === 'ban') {
+        const updates = action === 'hide_profile' ? { is_hidden: true } : { account_status: action === 'suspend' ? 'suspended' : 'banned' };
+        const { error } = await supabase.from('profiles').update(updates).eq('user_id', targetUserId);
+        if (error) throw error;
+      }
+      const status = action === 'ignore' ? 'dismissed' : 'resolved';
+      const note = labels[action];
+      await updateUserReport(report.id, { status, admin_note: note });
+      await logAdminAction({
+        action: `user_report_${action}`,
+        entityType: 'user_report',
+        entityId: report.id,
+        details: {
+          description: note,
+          report_id: report.id,
+          target_user_id: targetUserId || null,
+          action,
+          timestamp: new Date().toISOString(),
+        },
+      });
+      setReports((prev) => prev.map((r) => r.id === report.id ? { ...r, status, admin_note: note } : r));
+      setSelectedReportId(null);
+      setReportAction('');
+      setReportActionMessage('');
+    } catch (err) {
+      setError(err.message || 'تعذر تنفيذ الإجراء الإداري');
+    } finally {
+      setReportActionBusy(false);
+    }
+  };
+
   const handleReviewReport = async (reportId, status) => {
     if (!can('reports')) return setError('ليست لديك صلاحية بلاغات المستخدمين');
     try {
-      const reviewUpdates = {
-        status,
-        reviewed_at: new Date().toISOString(),
-        reviewed_by: currentUser?.id || null,
-      };
-      await updateUserReport(reportId, reviewUpdates);
-      setReports((prev) => prev.map((r) => (r.id === reportId ? { ...r, ...reviewUpdates } : r)));
-      await logAdminAction({ action: `review_user_report_${status}`, entityType: 'user_report', entityId: reportId, details: { description: `مراجعة بلاغ مستخدم: ${status}` } });
-    } catch (err) {
-      setError(err.message || 'تعذر تحديث حالة البلاغ');
-    }
+      const updates = { status, admin_note: status === 'open' ? 'تمت إعادة فتح البلاغ.' : null };
+      await updateUserReport(reportId, updates);
+      setReports((prev) => prev.map((r) => r.id === reportId ? { ...r, ...updates } : r));
+      await logAdminAction({ action: `review_user_report_${status}`, entityType: 'user_report', entityId: reportId, details: { description: `مراجعة بلاغ مستخدم: ${status}`, report_id: reportId } });
+      setReportAction('');
+      setReportActionMessage('');
+    } catch (err) { setError(err.message || 'تعذر تحديث حالة البلاغ'); }
   };
 
   const handleMakeAdmin = async (userId, role = 'moderator', permissions = []) => {
@@ -243,15 +331,86 @@ export default function AdminDashboardPage({ currentUser }) {
     { id: 'requests', label: 'طلبات التواصل', icon: SendIcon },
     { id: 'messages', label: 'الرسائل', icon: MessageSquare },
     { id: 'users', label: 'المستخدمين', icon: Users },
+    { id: 'admins', label: 'إدارة المشرفين', icon: Shield, ownerOnly: true },
     { id: 'issues', label: 'بلاغات الموقع', icon: Flag },
     { id: 'reports', label: 'بلاغات المستخدمين', icon: AlertCircle },
     { id: 'blocks', label: 'الحظر', icon: Ban },
     { id: 'audit', label: 'السجل', icon: ScrollText },
   ].filter((tab) => {
+    if (tab.ownerOnly) return adminState.isOwner;
     if (tab.id === 'profiles' || tab.id === 'users') return can('profiles');
     return can(tab.id);
   });
 
+
+  const loadSiteIssues = async () => {
+    try {
+      const rows = await fetchAllSiteIssues();
+      setIssues(rows);
+      return rows;
+    } catch (error) {
+      console.error('site issues fetch failed', error);
+      throw error;
+    }
+  };
+
+  const handleSiteIssueStatus = async (issueId, status) => {
+    if (!issueId) return;
+    setSiteIssueUpdating(true);
+    try {
+      const updated = await updateSiteIssueStatus(issueId, status);
+      setIssues((prev) => prev.map((row) => row.id === issueId ? { ...row, ...updated } : row));
+      setSelectedSiteIssue((prev) => prev && prev.id === issueId ? { ...prev, ...updated } : prev);
+    } catch (error) {
+      console.error('site issue update failed', error);
+      alert(error?.message || 'تعذر تحديث حالة بلاغ الموقع');
+    } finally {
+      setSiteIssueUpdating(false);
+    }
+  };
+
+  const loadAuditDisplayData = async (rows = []) => {
+    const adminIds = [...new Set(rows.map((r) => r.admin_user_id ?? r.admin_id ?? r.user_id).filter(Boolean))];
+    const targetIds = [...new Set(rows.map((r) => r.target_user_id ?? r.reported_user_id ?? r.target_id ?? r.entity_id).filter(Boolean))];
+    const ids = [...new Set([...adminIds, ...targetIds])];
+
+    if (!ids.length) {
+      setAuditAdminNameMap({});
+      setAuditUserNameMap({});
+      return;
+    }
+
+    try {
+      const { data: profiles, error } = await supabase
+        .from('profiles')
+        .select('user_id,الاسم')
+        .in('user_id', ids);
+
+      if (error) throw error;
+      const map = {};
+      (profiles || []).forEach((p) => {
+        map[p.user_id] = p.الاسم || 'بدون اسم';
+      });
+
+      const admins = {};
+      const users = {};
+      adminIds.forEach((id) => { admins[id] = map[id] || 'غير معروف'; });
+      targetIds.forEach((id) => { users[id] = map[id] || 'غير محدد'; });
+
+      setAuditAdminNameMap(admins);
+      setAuditUserNameMap(users);
+    } catch (error) {
+      console.error('audit profile names fetch failed', error);
+    }
+  };
+
+  const getFormattedAuditRows = () =>
+    [...(auditLogs || [])]
+      .sort((a, b) => new Date(b.created_at || b.timestamp || 0).getTime() - new Date(a.created_at || a.timestamp || 0).getTime())
+      .map((row) => formatAuditLogRow(row, {
+        adminNameMap: auditAdminNameMap,
+        userNameMap: auditUserNameMap,
+      }));
 
   return (
     <div className="admin-dashboard space-y-6">
@@ -263,22 +422,28 @@ export default function AdminDashboardPage({ currentUser }) {
       {/* Stats */}
       <div className="admin-dashboard-stats grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {[
-          { label: 'إجمالي المستخدمين', value: stats.totalUsers, icon: Users, color: 'bg-blue-50 text-blue-600' },
-          { label: 'ملفات معتمدة', value: stats.approvedProfiles, icon: CheckCircle2, color: 'bg-green-50 text-green-600' },
-          { label: 'ملفات معلقة', value: stats.pendingProfiles, icon: FileText, color: 'bg-amber-50 text-amber-600' },
-          { label: 'رسائل معلقة', value: stats.pendingMessages, icon: MessageSquare, color: 'bg-rose-50 text-rose-600' },
-          { label: 'بلاغات الموقع المفتوحة', value: stats.openIssues, icon: Flag, color: 'bg-red-50 text-red-600' },
-          { label: 'بلاغات المستخدمين المفتوحة', value: stats.openReports, icon: AlertCircle, color: 'bg-red-50 text-red-600' },
+          { label: 'إجمالي المستخدمين', value: stats.totalUsers, icon: Users, color: 'bg-blue-50 text-blue-600', tab: 'profiles', filter: null },
+          { label: 'ملفات معتمدة', value: stats.approvedProfiles, icon: CheckCircle2, color: 'bg-green-50 text-green-600', tab: 'profiles', filter: 'active' },
+          { label: 'ملفات معلقة', value: stats.pendingProfiles, icon: FileText, color: 'bg-amber-50 text-amber-600', tab: 'profiles', filter: 'pending' },
+          { label: 'رسائل معلقة', value: stats.pendingMessages, icon: MessageSquare, color: 'bg-rose-50 text-rose-600', tab: 'messages', filter: 'pending' },
+          { label: 'بلاغات الموقع المفتوحة', value: stats.openIssues, icon: Flag, color: 'bg-red-50 text-red-600', tab: 'issues', filter: 'open' },
+          { label: 'بلاغات المستخدمين المفتوحة', value: stats.openReports, icon: AlertCircle, color: 'bg-red-50 text-red-600', tab: 'reports', filter: 'open' },
         ].map((stat, idx) => (
-          <div key={idx} className="card flex items-center gap-4">
-            <div className={`flex h-12 w-12 items-center justify-center rounded-2xl ${stat.color}`}>
+          <button
+            key={idx}
+            type="button"
+            onClick={() => { setActiveTab(stat.tab); setStatFilter(stat.filter); }}
+            className="card flex w-full cursor-pointer items-center gap-4 text-right transition-shadow hover:shadow-md focus:outline-none focus:ring-2 focus:ring-brand-300"
+            aria-label={`فتح ${stat.label}`}
+          >
+            <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${stat.color}`}>
               <stat.icon size={24} />
             </div>
             <div>
               <p className="text-sm text-gray-500">{stat.label}</p>
               <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
             </div>
-          </div>
+          </button>
         ))}
       </div>
 
@@ -288,7 +453,7 @@ export default function AdminDashboardPage({ currentUser }) {
           {tabs.map((tab) => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
+              onClick={() => { setActiveTab(tab.id); setStatFilter(null); }}
               className={`flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition-colors ${
                 activeTab === tab.id ? 'bg-brand-600 text-white' : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
               }`}
@@ -313,7 +478,7 @@ export default function AdminDashboardPage({ currentUser }) {
                 </tr>
               </thead>
               <tbody>
-                {profiles.map((profile) => (
+                {profiles.filter((profile) => !statFilter || activeTab !== 'profiles' || profile.account_status === statFilter).map((profile) => (
                   <tr key={profile.id} className="border-b border-gray-50 last:border-0">
                     <td className="py-3 font-semibold">
                       <button
@@ -389,7 +554,7 @@ export default function AdminDashboardPage({ currentUser }) {
             {requests.length === 0 ? (
               <div className="rounded-2xl bg-gray-50 p-8 text-center text-sm text-gray-500">لا توجد طلبات تواصل</div>
             ) : (
-              requests.map((req) => (
+              requests.filter((req) => !statFilter || req.status === statFilter).map((req) => (
                 <div key={req.id} className="rounded-2xl border border-gray-100 bg-white p-4">
                   <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
                     <div className="text-sm">
@@ -418,7 +583,7 @@ export default function AdminDashboardPage({ currentUser }) {
             {messages.length === 0 ? (
               <div className="rounded-2xl bg-gray-50 p-8 text-center text-sm text-gray-500">لا توجد رسائل</div>
             ) : (
-              messages.map((msg) => (
+              messages.filter((msg) => !statFilter || msg.status === statFilter).map((msg) => (
                 <div key={msg.id} className="rounded-2xl border border-gray-100 bg-white p-4">
                   <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
                     <div className="text-sm">
@@ -438,6 +603,109 @@ export default function AdminDashboardPage({ currentUser }) {
                 </div>
               ))
             )}
+          </div>
+        )}
+
+        {/* Admin management tab — owner only */}
+        {activeTab === 'admins' && adminState.isOwner && (
+          <div className="space-y-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h2 className="text-lg font-bold text-gray-900">إدارة المشرفين</h2>
+                <p className="text-sm text-gray-500">
+                  إضافة المشرفين وتحديد الصلاحيات المسموح بها لكل مشرف.
+                </p>
+              </div>
+              <span className="rounded-full bg-brand-50 px-3 py-1 text-xs font-semibold text-brand-700">
+                المشرفون الإضافيون: {adminState.moderatorCount} / 2
+              </span>
+            </div>
+
+            <div className="rounded-2xl bg-gray-50 p-4 text-sm text-gray-600">
+              إدارة المشرفين متاحة للمشرف العام فقط. الصلاحيات تُفرض أيضًا من قاعدة البيانات، وليس من الواجهة فقط.
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[650px] text-sm">
+                <thead>
+                  <tr className="border-b border-gray-100 text-right text-gray-500">
+                    <th className="pb-3 font-medium">الاسم</th>
+                    <th className="pb-3 font-medium">البريد</th>
+                    <th className="pb-3 font-medium">الدور</th>
+                    <th className="pb-3 font-medium">الصلاحيات</th>
+                    <th className="pb-3 font-medium">الإجراءات</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {profiles.filter((profile) => profile.is_admin).map((profile) => (
+                    <tr key={profile.id} className="border-b border-gray-50 last:border-0">
+                      <td className="py-3 font-semibold text-gray-900">{profile.الاسم || 'بدون اسم'}</td>
+                      <td className="py-3 text-gray-600" dir="ltr">{profile.email || '-'}</td>
+                      <td className="py-3 text-gray-600">
+                        {profile.admin_role === 'owner' ? 'مشرف عام' : 'مشرف'}
+                      </td>
+                      <td className="py-3 text-gray-600">
+                        {profile.admin_role === 'owner'
+                          ? 'جميع الصلاحيات'
+                          : (Array.isArray(profile.admin_permissions) && profile.admin_permissions.length
+                            ? profile.admin_permissions
+                                .map((id) => ADMIN_PERMISSIONS.find((permission) => permission.id === id)?.label || id)
+                                .join('، ')
+                            : 'لا توجد صلاحيات')}
+                      </td>
+                      <td className="py-3">
+                        {profile.admin_role !== 'owner' && (
+                          <div className="flex gap-2">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setAdminModalUser(profile);
+                                setSelectedAdminPermissions(
+                                  Array.isArray(profile.admin_permissions) ? profile.admin_permissions : []
+                                );
+                              }}
+                              className="rounded-lg bg-brand-50 p-2 text-brand-600 hover:bg-brand-100"
+                              title="تعديل الصلاحيات"
+                            >
+                              <Shield size={16} />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleRevokeAdmin(profile.user_id)}
+                              className="rounded-lg bg-red-50 p-2 text-red-600 hover:bg-red-100"
+                              title="إلغاء صلاحية المشرف"
+                            >
+                              <Unlock size={16} />
+                            </button>
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="border-t border-gray-100 pt-4">
+              <h3 className="mb-3 text-sm font-bold text-gray-900">إضافة مشرف جديد</h3>
+              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                {profiles.filter((profile) => !profile.is_admin).map((profile) => (
+                  <button
+                    key={profile.id}
+                    type="button"
+                    disabled={adminState.moderatorCount >= 2}
+                    onClick={() => {
+                      setAdminModalUser(profile);
+                      setSelectedAdminPermissions([]);
+                    }}
+                    className="rounded-xl border border-gray-100 bg-white p-3 text-right text-sm hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <div className="font-semibold text-gray-900">{profile.الاسم || 'بدون اسم'}</div>
+                    <div className="mt-1 text-xs text-gray-500" dir="ltr">{profile.email || '-'}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
         )}
 
@@ -498,7 +766,7 @@ export default function AdminDashboardPage({ currentUser }) {
                 </tr>
               </thead>
               <tbody>
-                {profiles.map((profile) => (
+                {profiles.filter((profile) => !statFilter || activeTab !== 'profiles' || profile.account_status === statFilter).map((profile) => (
                   <tr key={profile.id} className="border-b border-gray-50 last:border-0">
                     <td className="py-3 font-semibold text-gray-900" dir="ltr">{profile.email || '-'}</td>
                     <td className="py-3 text-gray-600">
@@ -558,7 +826,7 @@ export default function AdminDashboardPage({ currentUser }) {
             {issues.length === 0 ? (
               <div className="rounded-2xl bg-gray-50 p-8 text-center text-sm text-gray-500">لا توجد بلاغات</div>
             ) : (
-              issues.map((issue) => (
+              issues.filter((issue) => !statFilter || issue.status === statFilter).map((issue) => (
                 <div key={issue.id} className="rounded-2xl border border-gray-100 bg-white p-4">
                   <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
                     <div className="text-sm">
@@ -618,7 +886,7 @@ export default function AdminDashboardPage({ currentUser }) {
             {reports.length === 0 ? (
               <div className="rounded-2xl bg-gray-50 p-8 text-center text-sm text-gray-500">لا توجد بلاغات بين المستخدمين</div>
             ) : (
-              reports.map((report) => (
+              reports.filter((report) => !statFilter || report.status === statFilter).map((report) => (
                 <div key={report.id} className="rounded-2xl border border-red-100 bg-red-50/30 p-4">
                   <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                     <div className="text-sm font-bold text-gray-900">بلاغ المستخدم</div>
@@ -682,33 +950,57 @@ export default function AdminDashboardPage({ currentUser }) {
                     </div>
                   <div className="mb-1 text-sm font-semibold text-gray-900">{report.reason}</div>
                   <p className="mb-3 text-sm text-gray-600">{report.details || 'لا توجد تفاصيل'}</p>
-                  <div className="flex flex-wrap gap-2">
-                    {report.status === 'open' && (
-                      <button
-                        onClick={() => handleReviewReport(report.id, 'resolved')}
-                        className="flex items-center gap-1 rounded-lg bg-green-50 px-3 py-1.5 text-xs font-semibold text-green-700 hover:bg-green-100"
-                      >
-                        <CheckCircle2 size={14} /> تم الحل
-                      </button>
+                  <div className="mt-3 rounded-xl border border-gray-100 bg-gray-50 p-3">
+                    <div className="mb-2 text-sm font-semibold text-gray-800">الإجراء الإداري</div>
+                    <select
+                      value={selectedReportId === report.id ? reportAction : ''}
+                      onChange={(e) => {
+                        setReportAction(e.target.value);
+                        if (e.target.value !== 'message') setReportActionMessage('');
+                      }}
+                      className="input-field w-full"
+                      disabled={reportActionBusy}
+                    >
+                      <option value="">اختر الإجراء قبل إنهاء البلاغ</option>
+                      <option value="warning">إرسال تحذير</option>
+                      <option value="message">إرسال رسالة مباشرة</option>
+                      <option value="hide_profile">إخفاء الملف الشخصي</option>
+                      <option value="suspend">تعليق الحساب</option>
+                      <option value="ban">حظر الحساب نهائيًا</option>
+                      <option value="ignore">تجاهل البلاغ (لا يستدعي إجراء)</option>
+                    </select>
+                    {reportAction === 'message' && selectedReportId === report.id && (
+                      <textarea
+                        value={reportActionMessage}
+                        onChange={(e) => setReportActionMessage(e.target.value)}
+                        className="input-field mt-2 min-h-[90px] w-full"
+                        placeholder="اكتب رسالة المستخدم..."
+                        disabled={reportActionBusy}
+                      />
                     )}
-                    {report.status === 'open' && (
-                      <button
-                        onClick={() => handleReviewReport(report.id, 'dismissed')}
-                        className="flex items-center gap-1 rounded-lg bg-gray-50 px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-100"
-                      >
-                        <XCircle size={14} /> تجاهل
-                      </button>
-                    )}
-                    {report.status !== 'open' && (
-                      <button
-                        onClick={() => handleReviewReport(report.id, 'open')}
-                        className="flex items-center gap-1 rounded-lg bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-700 hover:bg-amber-100"
-                      >
-                        <Unlock size={14} /> إعادة فتح
-                      </button>
-                    )}
-                      </div>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {report.status === 'open' && (
+                        <button
+                          type="button"
+                          onClick={() => handleReportAdminAction(report, reportAction)}
+                          disabled={!reportAction || reportActionBusy || (reportAction === 'message' && !reportActionMessage.trim())}
+                          className="btn-primary disabled:opacity-50"
+                        >
+                          {reportActionBusy ? 'جارٍ التنفيذ...' : 'تأكيد الإجراء وإنهاء البلاغ'}
+                        </button>
+                      )}
+                      {report.status !== 'open' && (
+                        <button
+                          type="button"
+                          onClick={() => handleReviewReport(report.id, 'open')}
+                          className="flex items-center gap-1 rounded-lg bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-700 hover:bg-amber-100"
+                        >
+                          <Unlock size={14} /> إعادة فتح
+                        </button>
+                      )}
                     </div>
+                  </div>
+                      </div>
                   )}
 
                 </div>
@@ -778,12 +1070,12 @@ export default function AdminDashboardPage({ currentUser }) {
                     <td colSpan="5" className="py-8 text-center text-sm text-gray-500">لا توجد سجلات</td>
                   </tr>
                 ) : (
-                  auditLogs.map((log) => (
+                  getFormattedAuditRows().map((log) => (
                     <tr key={log.id} className="border-b border-gray-50 last:border-0">
-                      <td className="py-3 text-gray-900">{log.admin_name || log.admin_email || '-'}</td>
-                      <td className="py-3 text-gray-600">{log.action}</td>
-                      <td className="py-3 text-gray-600">{log.target_type} {log.target_id ? `#${log.target_id}` : ''}</td>
-                      <td className="py-3 text-gray-600">{typeof log.details === 'string' ? log.details : (log.details?.description || log.details?.message || '-')}</td>
+                      <td className="py-3 text-gray-900">{log.displayAdminName || log.admin_name || log.admin_email || '-'}</td>
+                      <td className="py-3 text-gray-600">{log.displayAction}</td>
+                      <td className="py-3 text-gray-600">{log.displayTargetName}{log.displayTargetType ? ` (${log.displayTargetType})` : ''}</td>
+                      <td className="py-3 text-gray-600">{log.displayDetails || '-'}</td>
                       <td className="py-3 text-gray-500">{formatDateTime(log.created_at)}</td>
                     </tr>
                   ))
@@ -798,10 +1090,12 @@ export default function AdminDashboardPage({ currentUser }) {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" role="dialog" aria-modal="true">
           <div className="w-full max-w-lg rounded-3xl bg-white p-5 shadow-2xl">
             <div className="mb-4 flex items-center justify-between gap-3">
-              <div><h2 className="text-lg font-bold text-gray-900">إضافة مشرف بصلاحيات محددة</h2><p className="mt-1 text-sm text-gray-500">{adminModalUser.الاسم || 'المستخدم'}</p></div>
+              <div><h2 className="text-lg font-bold text-gray-900">{adminModalUser.is_admin ? 'تعديل صلاحيات المشرف' : 'إضافة مشرف بصلاحيات محددة'}</h2><p className="mt-1 text-sm text-gray-500">{adminModalUser.الاسم || 'المستخدم'}</p></div>
               <button type="button" onClick={() => setAdminModalUser(null)} className="rounded-xl bg-gray-100 px-3 py-2 text-sm">إغلاق</button>
             </div>
-            <div className="mb-4 rounded-2xl bg-amber-50 p-3 text-sm text-amber-800">يمكن للمالك إضافة مشرفين إضافيين بحد أقصى مشرفين اثنين، وكل مشرف يحصل فقط على الصلاحيات التي تحددها هنا.</div>
+            <div className="mb-4 rounded-2xl bg-amber-50 p-3 text-sm text-amber-800">
+              المالك فقط يستطيع إدارة المشرفين. يمكن تحديد الصلاحيات من هنا، ولا يمكن للمشرف المحدود فتح هذا القسم أو تعديل صلاحياته.
+            </div>
             <div className="grid gap-2 sm:grid-cols-2">
               {ADMIN_PERMISSIONS.map((permission) => (
                 <label key={permission.id} className="flex cursor-pointer items-center gap-2 rounded-xl border border-gray-100 p-3 text-sm">
@@ -811,7 +1105,14 @@ export default function AdminDashboardPage({ currentUser }) {
               ))}
             </div>
             <div className="mt-5 flex gap-2">
-              <button type="button" disabled={adminState.moderatorCount >= 2 || selectedAdminPermissions.length === 0} onClick={() => handleMakeAdmin(adminModalUser.user_id, 'moderator', selectedAdminPermissions)} className="btn-primary flex-1 disabled:cursor-not-allowed disabled:opacity-50">حفظ صلاحيات المشرف</button>
+              <button
+                type="button"
+                disabled={(!adminModalUser.is_admin && adminState.moderatorCount >= 2) || selectedAdminPermissions.length === 0}
+                onClick={() => handleMakeAdmin(adminModalUser.user_id, 'moderator', selectedAdminPermissions)}
+                className="btn-primary flex-1 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {adminModalUser.is_admin ? 'تحديث الصلاحيات' : 'حفظ صلاحيات المشرف'}
+              </button>
               <button type="button" onClick={() => setAdminModalUser(null)} className="rounded-xl bg-gray-100 px-4 py-2 font-semibold">إلغاء</button>
             </div>
           </div>

@@ -86,6 +86,7 @@ create table if not exists public.messages (
   body text not null,
   status text not null default 'pending' check (status in ('pending','approved','rejected')),
   admin_note text,
+  is_read boolean not null default false,
   created_at timestamptz not null default now()
 );
 

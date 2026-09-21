@@ -9,7 +9,8 @@ import {
   getReligiousLabel,
 } from '../data/mockData';
 import { fetchProfileById, recordProfileView } from '../services/profileService';
-import { sendContactRequest } from '../services/contactRequestService';
+import { fetchMyContactRequests, sendContactRequest } from '../services/contactRequestService';
+import { sendMessage } from '../services/messageService';
 import { submitUserReport } from '../services/userReportService';
 import { blockUser, isBlocked } from '../services/userBlockService';
 
@@ -79,16 +80,33 @@ export default function ProfileDetailPage({ currentUser }) {
     if (!messageText.trim() || !currentUser) return;
 
     try {
-      await sendContactRequest({
-        receiver_user_id: profile.user_id,
-        message: messageText.trim(),
-        request_type: 'private',
-      });
+      // After approval, this form sends a real message. Before approval it creates a contact request.
+      const requests = await fetchMyContactRequests();
+      const approved = (requests || []).find((request) =>
+        request.status === 'approved' &&
+        ((request.sender_user_id === currentUser.id && request.receiver_user_id === profile.user_id) ||
+          (request.sender_user_id === profile.user_id && request.receiver_user_id === currentUser.id))
+      );
+
+      if (approved) {
+        await sendMessage({
+          sender_id: currentUser.id,
+          receiver_id: profile.user_id,
+          body: messageText.trim(),
+        });
+      } else {
+        await sendContactRequest({
+          receiver_user_id: profile.user_id,
+          message: messageText.trim(),
+          request_type: 'private',
+        });
+      }
+
       setSent(true);
       setMessageText('');
       setTimeout(() => setShowMessageForm(false), 2000);
     } catch (err) {
-      setError(err.message || 'تعذر إرسال الطلب');
+      setError(err.message || 'تعذر إرسال الرسالة');
     }
   };
 

@@ -1,0 +1,15 @@
+-- Admin Management security check
+-- The project schema already contains a BEFORE UPDATE trigger named
+-- protect_admin_fields_trigger on public.profiles. It verifies:
+--   1) auth.uid() belongs to an owner admin before changing
+--      is_admin/admin_role/admin_permissions.
+--   2) no more than two additional moderators exist.
+--
+-- Apply/verify the existing schema migration before production:
+--   SELECT tgname FROM pg_trigger
+--   WHERE tgrelid = 'public.profiles'::regclass
+--     AND tgname = 'protect_admin_fields_trigger';
+--
+-- IMPORTANT:
+-- Do not remove or bypass this trigger. The frontend guard is only UX;
+-- the database trigger is the actual authorization boundary.
