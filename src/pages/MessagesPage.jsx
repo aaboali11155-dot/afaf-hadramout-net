@@ -18,7 +18,7 @@ export default function MessagesPage({ currentUser }) {
   const [error, setError] = useState('');
   const [selectedConversation, setSelectedConversation] = useState(null);
   const [chatText, setChatText] = useState('');
-  const [unreadRefresh, setUnreadRefresh] = useState(0);
+  const [_unreadRefresh, setUnreadRefresh] = useState(0);
   const conversationRef = useRef(null);
   const messagesEndRef = useRef(null);
 
@@ -44,6 +44,15 @@ export default function MessagesPage({ currentUser }) {
 
     loadMessages();
   }, [currentUser?.id]);
+
+  // Keep the conversation viewport at the newest message when opening,
+  // sending, or receiving messages, without changing the existing styling.
+  useEffect(() => {
+    if (!selectedConversation) return;
+    requestAnimationFrame(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    });
+  }, [selectedConversation, chatMessages.length]);
 
   if (!currentUser) {
     return (
@@ -105,14 +114,6 @@ export default function MessagesPage({ currentUser }) {
     }, 0);
   };
 
-  // Keep the conversation viewport at the newest message when opening,
-  // sending, or receiving messages, without changing the existing styling.
-  useEffect(() => {
-    if (!selectedConversation) return;
-    requestAnimationFrame(() => {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    });
-  }, [selectedConversation?.other_user_id, selectedMessages.length]);
 
   const handleSend = async (e) => {
     e.preventDefault();

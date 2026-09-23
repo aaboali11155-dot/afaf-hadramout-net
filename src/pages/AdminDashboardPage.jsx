@@ -17,11 +17,6 @@ import {
   Flag,
   ScrollText,
 } from 'lucide-react';
-import {
-  getEducationLabel,
-  getSocialLabel,
-  getReligiousLabel,
-} from '../data/mockData';
 import { fetchAllProfiles, updateProfile, toggleProfileVisibility } from '../services/profileService';
 import { fetchAllContactRequests, updateContactRequest } from '../services/contactRequestService';
 import { fetchAllSiteIssues, updateSiteIssue } from '../services/siteIssueService';
@@ -55,9 +50,6 @@ export default function AdminDashboardPage({ currentUser }) {
   const [auditAdminNameMap, setAuditAdminNameMap] = useState({});
   const [auditUserNameMap, setAuditUserNameMap] = useState({});
 
-  const [siteIssueStatusFilter, setSiteIssueStatusFilter] = useState('open');
-  const [selectedSiteIssue, setSelectedSiteIssue] = useState(null);
-  const [siteIssueUpdating, setSiteIssueUpdating] = useState(false);
 
 
   useEffect(() => {
@@ -343,31 +335,6 @@ export default function AdminDashboardPage({ currentUser }) {
   });
 
 
-  const loadSiteIssues = async () => {
-    try {
-      const rows = await fetchAllSiteIssues();
-      setIssues(rows);
-      return rows;
-    } catch (error) {
-      console.error('site issues fetch failed', error);
-      throw error;
-    }
-  };
-
-  const handleSiteIssueStatus = async (issueId, status) => {
-    if (!issueId) return;
-    setSiteIssueUpdating(true);
-    try {
-      const updated = await updateSiteIssueStatus(issueId, status);
-      setIssues((prev) => prev.map((row) => row.id === issueId ? { ...row, ...updated } : row));
-      setSelectedSiteIssue((prev) => prev && prev.id === issueId ? { ...prev, ...updated } : prev);
-    } catch (error) {
-      console.error('site issue update failed', error);
-      alert(error?.message || 'تعذر تحديث حالة بلاغ الموقع');
-    } finally {
-      setSiteIssueUpdating(false);
-    }
-  };
 
   const loadAuditDisplayData = async (rows = []) => {
     const adminIds = [...new Set(rows.map((r) => r.admin_user_id ?? r.admin_id ?? r.user_id).filter(Boolean))];
