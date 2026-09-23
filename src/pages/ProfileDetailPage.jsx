@@ -198,6 +198,16 @@ export default function ProfileDetailPage({ currentUser }) {
             </h2>
             <ul className="space-y-3 text-sm">
               <li className="flex justify-between border-b border-gray-200 pb-2">
+                <span className="text-gray-500">النوع</span>
+                <span className="font-semibold text-gray-900">
+                  {profile.الجنس === 'male' || profile.الجنس === 'ذكر' || profile.gender === 'male' || profile.gender === 'ذكر'
+                    ? 'شاب'
+                    : profile.الجنس === 'female' || profile.الجنس === 'أنثى' || profile.gender === 'female' || profile.gender === 'أنثى'
+                    ? 'بنت'
+                    : 'غير محدد'}
+                </span>
+              </li>
+              <li className="flex justify-between border-b border-gray-200 pb-2">
                 <span className="text-gray-500">المؤهل الدراسي</span>
                 <span className="font-semibold text-gray-900">{getEducationLabel(profile.المؤهل_الدراسي)}</span>
               </li>
