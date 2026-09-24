@@ -14,7 +14,7 @@ export async function sendAdminMessage({ receiverUserId, content }) {
   );
   if (!isAuthorized) throw new Error('ليست لديك صلاحية إرسال الرسائل');
   const { data, error } = await supabase.from('messages').insert({
-    sender_id: authData.user.id, receiver_id: receiverUserId, body: text, status: 'pending'
+    sender_id: authData.user.id, receiver_id: receiverUserId, body: text, status: 'approved'
   }).select().single();
   if (error) throw error;
   return data;

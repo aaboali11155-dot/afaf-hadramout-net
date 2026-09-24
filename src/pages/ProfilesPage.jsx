@@ -1,13 +1,12 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, MapPin, Heart, Filter, Eye, AlertCircle } from 'lucide-react';
+import { Search, MapPin, Filter, Eye, AlertCircle } from 'lucide-react';
 import {
   cities,
   getSocialStatuses,
   educationLevels,
   getEducationLabel,
   getSocialLabel,
-  getOriginLabel,
   getReligiousLabel,
 } from '../data/mockData';
 import { fetchApprovedProfiles } from '../services/profileService';

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Eye, ArrowRight, User, MapPin, Clock } from 'lucide-react';
 import { fetchMyProfile, fetchMyProfileViews } from '../services/profileService';
+import { getSocialLabel } from '../data/mockData';
 
 export default function ProfileViewsPage({ currentUser }) {
   const [views, setViews] = useState([]);
@@ -93,7 +94,7 @@ export default function ProfileViewsPage({ currentUser }) {
                             {visitor.المدينة}
                           </span>
                         )}
-                        {visitor?.الحالة_الاجتماعية && <span>• {visitor.الحالة_الاجتماعية}</span>}
+                        {visitor?.الحالة_الاجتماعية && <span>• {getSocialLabel(visitor.الحالة_الاجتماعية, visitor.الجنس || visitor.gender)}</span>}
                       </div>
                     </div>
                   </div>

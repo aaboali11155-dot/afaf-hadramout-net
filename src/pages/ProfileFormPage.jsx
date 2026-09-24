@@ -10,6 +10,12 @@ import {
   skinColors,
   origins,
   religiousLevels,
+  getSocialLabel,
+  getEducationLabel,
+  getSkinLabel,
+  getOriginLabel,
+  getReligiousLabel,
+  getOccupationLabel,
 } from '../data/mockData';
 import { fetchMyProfile, createProfile, updateProfile } from '../services/profileService';
 import { savePartnerPreference } from '../services/partnerPreferenceService';
@@ -105,13 +111,13 @@ export default function ProfileFormPage({ currentUser }) {
               ['الاسم', existingProfile.الاسم],
               ['العمر', existingProfile.العمر],
               ['المدينة', existingProfile.المدينة],
-              ['الحالة الاجتماعية', existingProfile.الحالة_الاجتماعية],
-              ['المؤهل الدراسي', existingProfile.المؤهل_الدراسي],
-              ['الوظيفة', existingProfile.الوظيفة],
+              ['الحالة الاجتماعية', getSocialLabel(existingProfile.الحالة_الاجتماعية, existingProfile.الجنس || existingProfile.gender)],
+              ['المؤهل الدراسي', getEducationLabel(existingProfile.المؤهل_الدراسي)],
+              ['الوظيفة', getOccupationLabel(existingProfile.الوظيفة, existingProfile.الجنس || existingProfile.gender)],
               ['الطول', existingProfile.الطول ? `${existingProfile.الطول} سم` : ''],
-              ['لون البشرة', existingProfile['لون البشرة'] || existingProfile.لون_البشرة],
-              ['الأصل', existingProfile.قبلي_او_حضري],
-              ['مستوى التدين', existingProfile.مستوى_التدين],
+              ['لون البشرة', getSkinLabel(existingProfile['لون البشرة'] || existingProfile.لون_البشرة)],
+              ['الأصل', getOriginLabel(existingProfile.قبلي_او_حضري)],
+              ['مستوى التدين', getReligiousLabel(existingProfile.مستوى_التدين)],
             ].map(([label, val]) => (
               <div key={label} className="rounded-xl bg-gray-50 p-4">
                 <div className="mb-1 text-xs font-medium text-gray-500">{label}</div>
@@ -131,10 +137,10 @@ export default function ProfileFormPage({ currentUser }) {
               {[
                 ['العمر', partner.min_age && partner.max_age ? `${partner.min_age} - ${partner.max_age}` : 'غير محدد'],
                 ['المدينة', cityValue],
-                ['الحالة الاجتماعية', partner.preferred_social_status],
-                ['المؤهل الدراسي', partner.preferred_education],
-                ['الوظيفة', partner.preferred_occupation],
-                ['مستوى التدين', partner.preferred_religious_level],
+                ['الحالة الاجتماعية', getSocialLabel(partner.preferred_social_status, partner.preferred_gender)],
+                ['المؤهل الدراسي', getEducationLabel(partner.preferred_education)],
+                ['الوظيفة', getOccupationLabel(partner.preferred_occupation, partner.preferred_gender)],
+                ['مستوى التدين', getReligiousLabel(partner.preferred_religious_level)],
               ].map(([label, val]) => (
                 <div key={label} className="rounded-xl bg-white/70 p-3">
                   <div className="mb-1 text-xs font-medium text-gray-500">{label}</div>
