@@ -17,7 +17,7 @@ import {
   Flag,
   ScrollText,
 } from 'lucide-react';
-import { fetchAllProfiles, updateProfile, toggleProfileVisibility } from '../services/profileService';
+import { fetchAllProfiles, updateProfile } from '../services/profileService';
 import { fetchAllContactRequests, updateContactRequest } from '../services/contactRequestService';
 import { fetchAllSiteIssues, updateSiteIssue } from '../services/siteIssueService';
 import { fetchAllUserReports, updateUserReport } from '../services/userReportService';
@@ -140,19 +140,6 @@ export default function AdminDashboardPage({ currentUser }) {
     }
   };
 
-  const handleToggleVisibility = async (profileId) => {
-    if (!can('profiles')) return setError('ليست لديك صلاحية إدارة الملفات');
-    const profile = profiles.find((p) => p.id === profileId);
-    const nextHidden = !Boolean(profile?.is_hidden);
-    try {
-      await toggleProfileVisibility(profileId, !nextHidden);
-      setProfiles((prev) => prev.map((p) => (p.id === profileId ? { ...p, is_hidden: nextHidden } : p)));
-      const profile = profiles.find((p) => p.id === profileId);
-      await logAdminAction({ action: nextHidden ? 'hide_profile' : 'unhide_profile', entityType: 'profile', entityId: profile?.user_id || null, details: { description: nextHidden ? 'إخفاء ملف المستخدم' : 'إظهار ملف المستخدم' } });
-    } catch (err) {
-      setError(err.message || 'تعذر تحديث رؤية الملف');
-    }
-  };
 
   const handleSuspendProfile = async (profileId) => {
     if (!can('profiles')) return setError('ليست لديك صلاحية إدارة الملفات');
@@ -793,15 +780,22 @@ export default function AdminDashboardPage({ currentUser }) {
             {issues.length === 0 ? (
               <div className="rounded-2xl bg-gray-50 p-8 text-center text-sm text-gray-500">لا توجد بلاغات</div>
             ) : (
-              issues.filter((issue) => !statFilter || issue.status === statFilter).map((issue) => (
+              issues.filter((issue) => {
+                if (!statFilter) return true;
+                if (statFilter === 'open') return ['new', 'open', 'in_progress'].includes(issue.status);
+                return issue.status === statFilter;
+              }).map((issue) => (
                 <div key={issue.id} className="rounded-2xl border border-gray-100 bg-white p-4">
                   <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
                     <div className="text-sm">
-                      <span className="font-bold text-gray-900">من:</span> {issue.reporter_name || issue.reporter_email}
+                      <span className="font-bold text-gray-900">من:</span> {issue.reporter_name || issue.user_email || issue.email || 'غير محدد'}{' '}
+                      {issue.created_at && (
+                        <span className="mr-2 text-xs text-gray-400">({formatDateTime(issue.created_at)})</span>
+                      )}
                     </div>
-                    {issue.status === 'open' ? (
+                    {['new', 'open'].includes(issue.status) ? (
                       <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2.5 py-1 text-xs font-semibold text-red-700">
-                        <AlertCircle size={12} /> مفتوح
+                        <AlertCircle size={12} /> {issue.status === 'new' ? 'جديد' : 'مفتوح'}
                       </span>
                     ) : issue.status === 'in_progress' ? (
                       <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-700">
@@ -813,10 +807,15 @@ export default function AdminDashboardPage({ currentUser }) {
                       </span>
                     )}
                   </div>
-                  <p className="mb-1 text-sm font-semibold text-gray-800">{issue.title}</p>
+                  <div className="mb-2 flex flex-wrap items-center gap-2">
+                    <span className="rounded-lg bg-gray-100 px-2.5 py-0.5 text-xs font-semibold text-gray-700">
+                      {issue.issue_type === 'bug' ? 'عطل تقني' : issue.issue_type === 'content' ? 'محتوى غير لائق' : issue.issue_type === 'account' ? 'مشكلة في الحساب' : 'أخرى'}
+                    </span>
+                    <p className="text-sm font-semibold text-gray-800">{issue.title}</p>
+                  </div>
                   <p className="mb-3 rounded-xl bg-gray-50 p-3 text-sm text-gray-700">{issue.description}</p>
                   <div className="flex flex-wrap gap-2">
-                    {issue.status === 'open' && (
+                    {['new', 'open'].includes(issue.status) && (
                       <button
                         onClick={() => handleReviewIssue(issue.id, 'in_progress')}
                         className="flex items-center gap-1 rounded-lg bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-700 hover:bg-amber-100"

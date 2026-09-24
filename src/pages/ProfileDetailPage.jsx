@@ -7,6 +7,7 @@ import {
   getSkinLabel,
   getOriginLabel,
   getReligiousLabel,
+  getOccupationLabel,
 } from '../data/mockData';
 import { fetchProfileById, recordProfileView } from '../services/profileService';
 import { fetchMyContactRequests, sendContactRequest } from '../services/contactRequestService';
@@ -225,7 +226,7 @@ export default function ProfileDetailPage({ currentUser }) {
               </li>
               <li className="flex justify-between border-b border-gray-200 pb-2">
                 <span className="text-gray-500">الوظيفة</span>
-                <span className="font-semibold text-gray-900">{profile.الوظيفة}</span>
+                <span className="font-semibold text-gray-900">{getOccupationLabel(profile.الوظيفة, profile.الجنس || profile.gender)}</span>
               </li>
               <li className="flex justify-between border-b border-gray-200 pb-2">
                 <span className="text-gray-500">الطول</span>
@@ -272,7 +273,7 @@ export default function ProfileDetailPage({ currentUser }) {
               </li>
               <li className="flex justify-between border-b border-brand-100 pb-2">
                 <span className="text-gray-500">الوظيفة</span>
-                <span className="font-semibold text-gray-900">{profile.partner_preferences?.preferred_occupation || 'لا يهم'}</span>
+                <span className="font-semibold text-gray-900">{getOccupationLabel(profile.partner_preferences?.preferred_occupation, profile.partner_preferences?.preferred_gender) || 'لا يهم'}</span>
               </li>
               <li className="flex justify-between">
                 <span className="text-gray-500">مستوى التدين</span>

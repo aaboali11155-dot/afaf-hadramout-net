@@ -4,9 +4,6 @@ import {
   ArrowRight,
   User,
   MapPin,
-  Calendar,
-  Briefcase,
-  GraduationCap,
   Heart,
   Shield,
   Eye,
@@ -17,6 +14,14 @@ import {
   X,
 } from 'lucide-react';
 import { fetchProfileById, updateProfile } from '../services/profileService';
+import {
+  getSocialLabel,
+  getEducationLabel,
+  getSkinLabel,
+  getOriginLabel,
+  getReligiousLabel,
+  getOccupationLabel,
+} from '../data/mockData';
 
 export default function AdminProfileDetailPage({ currentUser }) {
   const { id } = useParams();
@@ -205,27 +210,27 @@ export default function AdminProfileDetailPage({ currentUser }) {
               </div>
               <div className={fieldClass}>
                 <p className={labelClass}>الحالة الاجتماعية</p>
-                <p className={valueClass}>{profile.الحالة_الاجتماعية}</p>
+                <p className={valueClass}>{getSocialLabel(profile.الحالة_الاجتماعية, profile.الجنس || profile.gender)}</p>
               </div>
               <div className={fieldClass}>
                 <p className={labelClass}>المؤهل الدراسي</p>
-                <p className={valueClass}>{profile.المؤهل_الدراسي}</p>
+                <p className={valueClass}>{getEducationLabel(profile.المؤهل_الدراسي)}</p>
               </div>
               <div className={fieldClass}>
                 <p className={labelClass}>الوظيفة</p>
-                <p className={valueClass}>{profile.الوظيفة}</p>
+                <p className={valueClass}>{getOccupationLabel(profile.الوظيفة, profile.الجنس || profile.gender)}</p>
               </div>
               <div className={fieldClass}>
                 <p className={labelClass}>الطول</p>
-                <p className={valueClass}>{profile.الطول} سم</p>
+                <p className={valueClass}>{profile.الطول ? `${profile.الطول} سم` : 'غير محدد'}</p>
               </div>
               <div className={fieldClass}>
                 <p className={labelClass}>لون البشرة</p>
-                <p className={valueClass}>{profile['لون البشرة'] || profile.لون_البشرة}</p>
+                <p className={valueClass}>{getSkinLabel(profile['لون البشرة'] || profile.لون_البشرة)}</p>
               </div>
               <div className={fieldClass}>
                 <p className={labelClass}>قبلي أو حضري</p>
-                <p className={valueClass}>{profile.قبلي_او_حضري}</p>
+                <p className={valueClass}>{getOriginLabel(profile.قبلي_او_حضري)}</p>
               </div>
               <div className={fieldClass}>
                 <p className={labelClass}>الحالة الصحية</p>
@@ -303,8 +308,16 @@ export default function AdminProfileDetailPage({ currentUser }) {
                 <p className={valueClass}>{profile.partner_preferences?.preferred_city || 'غير محدد'}</p>
               </div>
               <div className={fieldClass}>
+                <p className={labelClass}>الحالة الاجتماعية المفضلة</p>
+                <p className={valueClass}>{getSocialLabel(profile.partner_preferences?.preferred_social_status, profile.partner_preferences?.preferred_gender) || 'لا يهم'}</p>
+              </div>
+              <div className={fieldClass}>
                 <p className={labelClass}>المؤهل الدراسي المفضل</p>
-                <p className={valueClass}>{profile.partner_preferences?.preferred_education || 'غير محدد'}</p>
+                <p className={valueClass}>{getEducationLabel(profile.partner_preferences?.preferred_education) || 'غير محدد'}</p>
+              </div>
+              <div className={fieldClass}>
+                <p className={labelClass}>مستوى التدين المفضل</p>
+                <p className={valueClass}>{getReligiousLabel(profile.partner_preferences?.preferred_religious_level) || 'لا يهم'}</p>
               </div>
             </div>
           </div>

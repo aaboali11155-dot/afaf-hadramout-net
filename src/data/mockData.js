@@ -284,3 +284,92 @@ export const getSocialLabel = (value, gender = 'male') => getLabel(getSocialStat
 export const getSkinLabel = (value) => getLabel(skinColors, value);
 export const getOriginLabel = (value) => getLabel(origins, value);
 export const getReligiousLabel = (value) => getLabel(religiousLevels, value);
+
+export const getOccupationLabel = (value, gender = 'male') => {
+  if (!value) return '';
+  const isFemale = gender === 'female' || gender === 'أنثى';
+
+  const exactMap = isFemale
+    ? {
+        'طالب/طالبة': 'طالبة',
+        'طالب': 'طالبة',
+        'طالبة': 'طالبة',
+        'student': 'طالبة',
+        'موظف حكومي': 'موظفة حكومية',
+        'government_employee': 'موظفة حكومية',
+        'موظف قطاع خاص': 'موظفة قطاع خاص',
+        'private_employee': 'موظفة قطاع خاص',
+        'مهندس': 'مهندسة',
+        'مهندسة': 'مهندسة',
+        'engineer': 'مهندسة',
+        'طبيب/طبيبة': 'طبيبة',
+        'طبيب': 'طبيبة',
+        'طبيبة': 'طبيبة',
+        'doctor': 'طبيبة',
+        'معلم/معلمة': 'معلمة',
+        'معلم': 'معلمة',
+        'معلمة': 'معلمة',
+        'teacher': 'معلمة',
+        'تاجر/تاجرة': 'تاجرة',
+        'تاجر': 'تاجرة',
+        'تاجرة': 'تاجرة',
+        'merchant': 'تاجرة',
+        'صاحب عمل': 'صاحبة عمل',
+        'business_owner': 'صاحبة عمل',
+        'عامل': 'عاملة',
+        'عاملة': 'عاملة',
+        'worker': 'عاملة',
+        'ربة منزل': 'ربة منزل',
+        'housewife': 'ربة منزل',
+        'غير موظف حالياً': 'غير موظفة حالياً',
+        'unemployed': 'غير موظفة حالياً',
+        'أخرى': 'أخرى',
+        'other': 'أخرى',
+      }
+    : {
+        'طالب/طالبة': 'طالب',
+        'طالب': 'طالب',
+        'طالبة': 'طالب',
+        'student': 'طالب',
+        'موظف حكومي': 'موظف حكومي',
+        'government_employee': 'موظف حكومي',
+        'موظف قطاع خاص': 'موظف قطاع خاص',
+        'private_employee': 'موظف قطاع خاص',
+        'مهندس': 'مهندس',
+        'مهندسة': 'مهندس',
+        'engineer': 'مهندس',
+        'طبيب/طبيبة': 'طبيب',
+        'طبيب': 'طبيب',
+        'طبيبة': 'طبيب',
+        'doctor': 'طبيب',
+        'معلم/معلمة': 'معلم',
+        'معلم': 'معلم',
+        'معلمة': 'معلم',
+        'teacher': 'معلم',
+        'تاجر/تاجرة': 'تاجر',
+        'تاجر': 'تاجر',
+        'تاجرة': 'تاجر',
+        'merchant': 'تاجر',
+        'صاحب عمل': 'صاحب عمل',
+        'business_owner': 'صاحب عمل',
+        'عامل': 'عامل',
+        'عاملة': 'عامل',
+        'worker': 'عامل',
+        'ربة منزل': 'ربة منزل',
+        'housewife': 'ربة منزل',
+        'غير موظف حالياً': 'غير موظف حالياً',
+        'unemployed': 'غير موظف حالياً',
+        'أخرى': 'أخرى',
+        'other': 'أخرى',
+      };
+
+  if (exactMap[value]) return exactMap[value];
+
+  if (typeof value === 'string' && value.includes('/')) {
+    const parts = value.split('/');
+    if (isFemale && parts.length > 1) return parts[1].trim();
+    return parts[0].trim();
+  }
+
+  return value;
+};

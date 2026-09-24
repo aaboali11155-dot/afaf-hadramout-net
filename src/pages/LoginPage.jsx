@@ -17,7 +17,7 @@ export default function LoginPage({ setCurrentUser }) {
     setLoading(true);
 
     try {
-      const { user, session } = await signIn({
+      const { user } = await signIn({
         email: formData.email,
         password: formData.password,
       });
