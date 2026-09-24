@@ -124,7 +124,7 @@ export default function AdminDashboardPage({ currentUser }) {
     pendingProfiles: profiles.filter((p) => p.account_status === 'pending').length,
     pendingMessages: messages.filter((m) => m.status === 'pending').length,
     approvedProfiles: profiles.filter((p) => p.account_status === 'active').length,
-    openIssues: issues.filter((i) => i.status === 'open').length,
+    openIssues: issues.filter((i) => ['new', 'open', 'in_progress'].includes(i.status)).length,
     openReports: reports.filter((r) => r.status === 'open').length,
   };
 
@@ -787,12 +787,26 @@ export default function AdminDashboardPage({ currentUser }) {
               }).map((issue) => (
                 <div key={issue.id} className="rounded-2xl border border-gray-100 bg-white p-4">
                   <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-                    <div className="text-sm">
-                      <span className="font-bold text-gray-900">من:</span> {issue.reporter_name || issue.user_email || issue.email || 'غير محدد'}{' '}
-                      {issue.created_at && (
-                        <span className="mr-2 text-xs text-gray-400">({formatDateTime(issue.created_at)})</span>
-                      )}
-                    </div>
+                    {(() => {
+                      const name = issue.reporter_name?.trim();
+                      const email = (issue.email || issue.user_email)?.trim();
+                      let senderDisplay = 'غير محدد';
+                      if (name && email) {
+                        senderDisplay = `${name} (${email})`;
+                      } else if (name) {
+                        senderDisplay = name;
+                      } else if (email) {
+                        senderDisplay = email;
+                      }
+                      return (
+                        <div className="text-sm">
+                          <span className="font-bold text-gray-900">من:</span> {senderDisplay}{' '}
+                          {issue.created_at && (
+                            <span className="mr-2 text-xs text-gray-400">({formatDateTime(issue.created_at)})</span>
+                          )}
+                        </div>
+                      );
+                    })()}
                     {['new', 'open'].includes(issue.status) ? (
                       <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2.5 py-1 text-xs font-semibold text-red-700">
                         <AlertCircle size={12} /> {issue.status === 'new' ? 'جديد' : 'مفتوح'}
