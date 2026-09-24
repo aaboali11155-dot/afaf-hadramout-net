@@ -6,8 +6,11 @@ export async function sendAdminMessage({ receiverUserId, content }) {
   const { data: authData, error: authError } = await supabase.auth.getUser();
   if (authError || !authData?.user?.id) throw new Error('يجب تسجيل الدخول');
   const { data: me, error: meError } = await supabase.from('profiles')
-    .select('user_id,is_admin,admin_role,account_status').eq('user_id', authData.user.id).single();
+    .select('user_id,is_admin,admin_role,admin_permissions,account_status').eq('user_id', authData.user.id).single();
   if (meError || !me?.is_admin || !['owner','moderator'].includes(me.admin_role)) throw new Error('غير مصرح');
+  if (me.admin_role !== 'owner' && Array.isArray(me.admin_permissions) && me.admin_permissions.length > 0 && !me.admin_permissions.includes('messages')) {
+    throw new Error('ليست لديك صلاحية إرسال أو مراجعة الرسائل');
+  }
   const { data, error } = await supabase.from('messages').insert({
     sender_id: authData.user.id, receiver_id: receiverUserId, body: text, status: 'pending'
   }).select().single();

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { MapPin, Briefcase, GraduationCap, Ruler, User, Heart, MessageCircle, ArrowRight, AlertCircle, Flag, Ban } from 'lucide-react';
+import { MapPin, User, Heart, MessageCircle, ArrowRight, AlertCircle, Flag, Ban } from 'lucide-react';
 import {
   getEducationLabel,
   getSocialLabel,
@@ -75,31 +75,43 @@ export default function ProfileDetailPage({ currentUser }) {
 
   const isOwnProfile = currentUser?.id === profile.user_id;
 
+  const isAuthorizedAdmin = currentUser?.isAdmin && (
+    currentUser?.adminRole === 'owner' ||
+    (Array.isArray(currentUser?.adminPermissions) && currentUser.adminPermissions.includes('messages'))
+  );
+
+  const canSendMessage = !isOwnProfile && currentUser && (!currentUser.isAdmin || isAuthorizedAdmin);
+
   const handleSendMessage = async (e) => {
     e.preventDefault();
     if (!messageText.trim() || !currentUser) return;
 
     try {
-      // After approval, this form sends a real message. Before approval it creates a contact request.
-      const requests = await fetchMyContactRequests();
-      const approved = (requests || []).find((request) =>
-        request.status === 'approved' &&
-        ((request.sender_user_id === currentUser.id && request.receiver_user_id === profile.user_id) ||
-          (request.sender_user_id === profile.user_id && request.receiver_user_id === currentUser.id))
-      );
-
-      if (approved) {
-        await sendMessage({
-          sender_id: currentUser.id,
-          receiver_id: profile.user_id,
-          body: messageText.trim(),
-        });
+      if (currentUser.isAdmin) {
+        const { sendAdminMessage } = await import('../services/adminMessageService');
+        await sendAdminMessage({ receiverUserId: profile.user_id, content: messageText.trim() });
       } else {
-        await sendContactRequest({
-          receiver_user_id: profile.user_id,
-          message: messageText.trim(),
-          request_type: 'private',
-        });
+        // After approval, this form sends a real message. Before approval it creates a contact request.
+        const requests = await fetchMyContactRequests();
+        const approved = (requests || []).find((request) =>
+          request.status === 'approved' &&
+          ((request.sender_user_id === currentUser.id && request.receiver_user_id === profile.user_id) ||
+            (request.sender_user_id === profile.user_id && request.receiver_user_id === currentUser.id))
+        );
+
+        if (approved) {
+          await sendMessage({
+            sender_id: currentUser.id,
+            receiver_id: profile.user_id,
+            body: messageText.trim(),
+          });
+        } else {
+          await sendContactRequest({
+            receiver_user_id: profile.user_id,
+            message: messageText.trim(),
+            request_type: 'private',
+          });
+        }
       }
 
       setSent(true);
@@ -275,7 +287,7 @@ export default function ProfileDetailPage({ currentUser }) {
           <p className="leading-relaxed text-gray-700">{profile.نبذة_عن_نفسه}</p>
         </div>
 
-        {!isOwnProfile && currentUser && currentUser.role !== 'admin' && (
+        {canSendMessage && (
           <div className="mt-6 space-y-3">
             {!showMessageForm ? (
               <button
@@ -289,9 +301,11 @@ export default function ProfileDetailPage({ currentUser }) {
             ) : (
               <form onSubmit={handleSendMessage} className="rounded-2xl bg-gray-50 p-5">
                 <h3 className="mb-3 text-base font-bold text-gray-900">إرسال رسالة إلى {profile.الاسم}</h3>
-                <p className="mb-3 text-xs text-gray-500">
-                  ستُرسل رسالتك للمشرف للمراجعة قبل إيصالها للطرف الآخر.
-                </p>
+                {!currentUser.isAdmin && (
+                  <p className="mb-3 text-xs text-gray-500">
+                    ستُرسل رسالتك للمشرف للمراجعة قبل إيصالها للطرف الآخر.
+                  </p>
+                )}
                 <textarea
                   value={messageText}
                   onChange={(e) => setMessageText(e.target.value)}
@@ -300,7 +314,9 @@ export default function ProfileDetailPage({ currentUser }) {
                   required
                 />
                 {sent && (
-                  <p className="mt-2 text-sm font-semibold text-green-600">تم إرسال الرسالة للمراجعة بنجاح</p>
+                  <p className="mt-2 text-sm font-semibold text-green-600">
+                    {currentUser.isAdmin ? 'تم إرسال الرسالة بنجاح' : 'تم إرسال الرسالة للمراجعة بنجاح'}
+                  </p>
                 )}
                 <div className="mt-3 flex gap-3">
                   <button type="button" onClick={() => setShowMessageForm(false)} className="btn-secondary flex-1">
@@ -313,69 +329,71 @@ export default function ProfileDetailPage({ currentUser }) {
               </form>
             )}
 
-            {blocked && (
+            {!currentUser.isAdmin && blocked && (
               <div className="rounded-2xl bg-red-50 p-4 text-center text-sm text-red-700">
                 لقد قمت بحظر هذا المستخدم. لن تظهر له رسائلك ولن تصلك رسائله.
               </div>
             )}
 
-            {!reportOpen ? (
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setReportOpen(true)}
-                  className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-red-200 bg-white px-4 py-3 text-sm font-semibold text-red-700 shadow-sm transition-colors hover:bg-red-50"
-                >
-                  <Flag size={16} />
-                  بلاغ عن الملف
-                </button>
-                <button
-                  onClick={handleBlock}
-                  disabled={blocked || actionLoading === 'block'}
-                  className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-gray-700 shadow-sm transition-colors hover:bg-gray-50 disabled:opacity-50"
-                >
-                  <Ban size={16} />
-                  {blocked ? 'محظور' : 'حظر'}
-                </button>
-              </div>
-            ) : (
-              <form onSubmit={handleReport} className="rounded-2xl border border-red-100 bg-red-50/50 p-5">
-                <h3 className="mb-3 flex items-center gap-2 text-base font-bold text-gray-900">
-                  <Flag size={18} className="text-red-600" />
-                  بلاغ عن {profile.الاسم}
-                </h3>
-                <p className="mb-3 text-xs text-gray-500">
-                  أرسل بلاغاً للمشرف. لن يتم إبلاغ الطرف الآخر بهويتك.
-                </p>
-                <input
-                  type="text"
-                  value={reportReason}
-                  onChange={(e) => setReportReason(e.target.value)}
-                  className="input-field mb-3"
-                  placeholder="سبب البلاغ (مثال: محتوى مخالف، تصرف غير لائق)"
-                  required
-                />
-                <textarea
-                  value={reportDetails}
-                  onChange={(e) => setReportDetails(e.target.value)}
-                  className="input-field min-h-[80px] resize-none"
-                  placeholder="تفاصيل إضافية (اختياري)"
-                />
-                {reportSent && (
-                  <p className="mt-2 text-sm font-semibold text-green-600">تم إرسال البلاغ بنجاح، سيراجعه المشرف</p>
-                )}
-                <div className="mt-3 flex gap-3">
-                  <button type="button" onClick={() => setReportOpen(false)} className="btn-secondary flex-1">
-                    إلغاء
+            {!currentUser.isAdmin && (
+              !reportOpen ? (
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setReportOpen(true)}
+                    className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-red-200 bg-white px-4 py-3 text-sm font-semibold text-red-700 shadow-sm transition-colors hover:bg-red-50"
+                  >
+                    <Flag size={16} />
+                    بلاغ عن الملف
                   </button>
                   <button
-                    type="submit"
-                    className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-red-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-red-700 disabled:opacity-50"
-                    disabled={!reportReason.trim() || actionLoading === 'report'}
+                    onClick={handleBlock}
+                    disabled={blocked || actionLoading === 'block'}
+                    className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-gray-700 shadow-sm transition-colors hover:bg-gray-50 disabled:opacity-50"
                   >
-                    {actionLoading === 'report' ? 'جاري الإرسال...' : <><SendIcon size={16} /> إرسال البلاغ</>}
+                    <Ban size={16} />
+                    {blocked ? 'محظور' : 'حظر'}
                   </button>
                 </div>
-              </form>
+              ) : (
+                <form onSubmit={handleReport} className="rounded-2xl border border-red-100 bg-red-50/50 p-5">
+                  <h3 className="mb-3 flex items-center gap-2 text-base font-bold text-gray-900">
+                    <Flag size={18} className="text-red-600" />
+                    بلاغ عن {profile.الاسم}
+                  </h3>
+                  <p className="mb-3 text-xs text-gray-500">
+                    أرسل بلاغاً للمشرف. لن يتم إبلاغ الطرف الآخر بهويتك.
+                  </p>
+                  <input
+                    type="text"
+                    value={reportReason}
+                    onChange={(e) => setReportReason(e.target.value)}
+                    className="input-field mb-3"
+                    placeholder="سبب البلاغ (مثال: محتوى مخالف، تصرف غير لائق)"
+                    required
+                  />
+                  <textarea
+                    value={reportDetails}
+                    onChange={(e) => setReportDetails(e.target.value)}
+                    className="input-field min-h-[80px] resize-none"
+                    placeholder="تفاصيل إضافية (اختياري)"
+                  />
+                  {reportSent && (
+                    <p className="mt-2 text-sm font-semibold text-green-600">تم إرسال البلاغ بنجاح، سيراجعه المشرف</p>
+                  )}
+                  <div className="mt-3 flex gap-3">
+                    <button type="button" onClick={() => setReportOpen(false)} className="btn-secondary flex-1">
+                      إلغاء
+                    </button>
+                    <button
+                      type="submit"
+                      className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-red-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-red-700 disabled:opacity-50"
+                      disabled={!reportReason.trim() || actionLoading === 'report'}
+                    >
+                      {actionLoading === 'report' ? 'جاري الإرسال...' : <><SendIcon size={16} /> إرسال البلاغ</>}
+                    </button>
+                  </div>
+                </form>
+              )
             )}
           </div>
         )}

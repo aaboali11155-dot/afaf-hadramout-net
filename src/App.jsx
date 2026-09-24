@@ -96,6 +96,7 @@ export default function App() {
       role: profile?.is_admin ? 'admin' : 'user',
       isAdmin: !!profile?.is_admin,
       adminRole: profile?.admin_role || null,
+      adminPermissions: Array.isArray(profile?.admin_permissions) ? profile.admin_permissions : [],
       isActive: profile?.account_status === 'active',
       profileId: profile?.id || null,
     });
