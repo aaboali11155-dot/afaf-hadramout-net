@@ -77,7 +77,7 @@ export default function ProfileDetailPage({ currentUser }) {
 
   const isAuthorizedAdmin = currentUser?.isAdmin && (
     currentUser?.adminRole === 'owner' ||
-    (Array.isArray(currentUser?.adminPermissions) && currentUser.adminPermissions.includes('messages'))
+    (currentUser?.adminRole === 'moderator' && Array.isArray(currentUser?.adminPermissions) && currentUser.adminPermissions.includes('messages'))
   );
 
   const canSendMessage = !isOwnProfile && currentUser && (!currentUser.isAdmin || isAuthorizedAdmin);
