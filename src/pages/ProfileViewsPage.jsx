@@ -72,6 +72,8 @@ export default function ProfileViewsPage({ currentUser }) {
           <div className="space-y-3">
             {views.map((view) => {
               const visitor = view.visitor;
+              const visitCount = view.visit_count ?? 1;
+              const lastVisited = view.last_visited_at || view.created_at;
               return (
                 <Link
                   key={view.id}
@@ -99,10 +101,11 @@ export default function ProfileViewsPage({ currentUser }) {
                     </div>
                   </div>
                   <div className="text-left text-xs text-gray-400">
-                    <span className="inline-flex items-center gap-1">
+                    <div className="font-medium text-gray-600">عدد الزيارات: {visitCount}</div>
+                    <div className="mt-1 flex items-center gap-1">
                       <Clock size={12} />
-                      {formatDate(view.created_at)}
-                    </span>
+                      <span>آخر زيارة: {formatDate(lastVisited)}</span>
+                    </div>
                   </div>
                 </Link>
               );

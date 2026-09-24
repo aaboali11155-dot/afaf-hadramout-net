@@ -18,8 +18,15 @@ export async function blockUser({ blockedUserId, reason = '' }) {
   return data;
 }
 
-export async function unblockUser(blockId) {
-  const { error } = await supabase.from('user_blocks').delete().eq('id', blockId);
+export async function unblockUser(blockIdOrBlockedUserId) {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('يجب تسجيل الدخول');
+
+  const { error } = await supabase
+    .from('user_blocks')
+    .delete()
+    .or(`id.eq.${blockIdOrBlockedUserId},and(blocker_id.eq.${user.id},blocked_id.eq.${blockIdOrBlockedUserId})`);
+
   if (error) throw error;
   return true;
 }

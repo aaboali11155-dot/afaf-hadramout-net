@@ -48,7 +48,26 @@ export async function fetchAllSiteIssues({ status = null } = {}) {
 
   const { data, error } = await query;
   if (error) throw error;
-  return data || [];
+  const rows = data || [];
+
+  const userIds = [...new Set(rows.map((row) => row.user_id).filter(Boolean))];
+  if (!userIds.length) return rows;
+
+  const { data: profiles, error: profileError } = await supabase
+    .from('profiles')
+    .select('user_id,الاسم')
+    .in('user_id', userIds);
+
+  if (profileError) {
+    return rows;
+  }
+
+  const nameMap = new Map((profiles || []).map((p) => [p.user_id, p.الاسم]));
+
+  return rows.map((row) => ({
+    ...row,
+    reporter_name: row.user_id ? (nameMap.get(row.user_id) || null) : null,
+  }));
 }
 
 export async function getOpenSiteIssues() {

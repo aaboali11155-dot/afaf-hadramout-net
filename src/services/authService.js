@@ -54,28 +54,36 @@ export async function signIn({ email, password }) {
     if (existingError) throw existingError;
 
     // لا نغيّر حالة الحساب عند تسجيل الدخول؛ خصوصًا الحسابات الموقوفة/المحظورة.
-    if (existing?.account_status === 'suspended' || existing?.account_status === 'blocked') {
+    if (['suspended', 'blocked', 'banned'].includes(existing?.account_status)) {
       await supabase.auth.signOut();
       throw new Error('هذا الحساب موقوف ولا يمكن تسجيل الدخول به.');
     }
 
-    const payload = {
-      user_id: data.user.id,
-      الجنس: gender || null,
-      إقرار_الزواج: acceptedOath ?? null,
-    };
-
     if (existing) {
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update(payload)
-        .eq('user_id', data.user.id);
-      if (updateError) throw updateError;
+      const payload = {};
+      if (gender !== undefined && gender !== null) {
+        payload.الجنس = gender;
+      }
+      if (acceptedOath !== undefined && acceptedOath !== null) {
+        payload.إقرار_الزواج = acceptedOath;
+      }
+
+      if (Object.keys(payload).length > 0) {
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update(payload)
+          .eq('user_id', data.user.id);
+        if (updateError) throw updateError;
+      }
     } else {
-      const { error: insertError } = await supabase.from('profiles').insert({
-        ...payload,
+      const payload = {
+        user_id: data.user.id,
         account_status: 'active',
-      });
+      };
+      if (gender !== undefined && gender !== null) payload.الجنس = gender;
+      if (acceptedOath !== undefined && acceptedOath !== null) payload.إقرار_الزواج = acceptedOath;
+
+      const { error: insertError } = await supabase.from('profiles').insert(payload);
       if (insertError) throw insertError;
     }
   }

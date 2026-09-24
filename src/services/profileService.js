@@ -140,11 +140,42 @@ export async function recordProfileView(visitorUserId, visitedProfileId) {
   if (profileError) throw profileError;
   if (!visitedProfile?.user_id || visitedProfile.user_id === visitorUserId) return;
 
-  const { error } = await supabase.from('profile_views').upsert(
-    { viewer_id: visitorUserId, viewed_user_id: visitedProfile.user_id, created_at: new Date().toISOString() },
-    { onConflict: 'viewer_id,viewed_user_id' }
-  );
-  if (error) throw error;
+  const { error: rpcError } = await supabase.rpc('record_profile_view', {
+    p_viewed_user_id: visitedProfile.user_id,
+  });
+
+  if (!rpcError) return;
+
+  const now = new Date().toISOString();
+  const { data: existing } = await supabase
+    .from('profile_views')
+    .select('id, visit_count')
+    .eq('viewer_id', visitorUserId)
+    .eq('viewed_user_id', visitedProfile.user_id)
+    .maybeSingle();
+
+  if (existing) {
+    const nextCount = (Number(existing.visit_count) || 1) + 1;
+    const { error: updateError } = await supabase
+      .from('profile_views')
+      .update({
+        visit_count: nextCount,
+        last_visited_at: now,
+      })
+      .eq('id', existing.id);
+
+    if (updateError) {
+      await supabase.from('profile_views').upsert(
+        { viewer_id: visitorUserId, viewed_user_id: visitedProfile.user_id, visit_count: nextCount, last_visited_at: now },
+        { onConflict: 'viewer_id,viewed_user_id' }
+      );
+    }
+  } else {
+    await supabase.from('profile_views').upsert(
+      { viewer_id: visitorUserId, viewed_user_id: visitedProfile.user_id, visit_count: 1, last_visited_at: now, created_at: now },
+      { onConflict: 'viewer_id,viewed_user_id' }
+    );
+  }
 }
 
 export async function fetchMyProfileViews(profileId) {
@@ -155,7 +186,7 @@ export async function fetchMyProfileViews(profileId) {
 
   const { data, error } = await supabase
     .from('profile_views')
-    .select('id,created_at,viewer_id,viewed_user_id')
+    .select('*')
     .eq('viewed_user_id', myProfile.user_id)
     .order('created_at', { ascending: false });
   if (error) throw error;
@@ -164,9 +195,11 @@ export async function fetchMyProfileViews(profileId) {
   if (!viewerIds.length) return [];
   const { data: visitors, error: visitorsError } = await supabase
     .from('profiles')
-    .select('id,user_id,الاسم,العمر,المدينة,الحالة_الاجتماعية,account_status')
+    .select('id,user_id,الاسم,العمر,المدينة,الحالة_الاجتماعية,account_status,الجنس,gender')
     .in('user_id', viewerIds);
   if (visitorsError) throw visitorsError;
   const byUser = new Map((visitors || []).map(v => [v.user_id, v]));
-  return (data || []).map(v => ({ ...v, visitor: byUser.get(v.viewer_id) || null }));
+  return (data || [])
+    .map(v => ({ ...v, visitor: byUser.get(v.viewer_id) || null }))
+    .sort((a, b) => new Date(b.last_visited_at || b.created_at || 0).getTime() - new Date(a.last_visited_at || a.created_at || 0).getTime());
 }

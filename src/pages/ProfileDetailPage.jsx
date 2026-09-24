@@ -13,7 +13,7 @@ import { fetchProfileById, recordProfileView } from '../services/profileService'
 import { fetchMyContactRequests, sendContactRequest } from '../services/contactRequestService';
 import { sendMessage } from '../services/messageService';
 import { submitUserReport } from '../services/userReportService';
-import { blockUser, isBlocked } from '../services/userBlockService';
+import { blockUser, unblockUser, isBlocked } from '../services/userBlockService';
 
 export default function ProfileDetailPage({ currentUser }) {
   const { id } = useParams();
@@ -123,14 +123,19 @@ export default function ProfileDetailPage({ currentUser }) {
     }
   };
 
-  const handleBlock = async () => {
+  const handleBlockToggle = async () => {
     if (!currentUser || !profile?.user_id) return;
     setActionLoading('block');
     try {
-      await blockUser({ blockedUserId: profile.user_id, reason: '' });
-      setBlocked(true);
+      if (blocked) {
+        await unblockUser(profile.user_id);
+        setBlocked(false);
+      } else {
+        await blockUser({ blockedUserId: profile.user_id, reason: '' });
+        setBlocked(true);
+      }
     } catch (err) {
-      setError(err.message || 'تعذر حظر المستخدم');
+      setError(err.message || 'تعذر تغيير حالة الحظر');
     } finally {
       setActionLoading('');
     }
@@ -347,12 +352,12 @@ export default function ProfileDetailPage({ currentUser }) {
                     بلاغ عن الملف
                   </button>
                   <button
-                    onClick={handleBlock}
-                    disabled={blocked || actionLoading === 'block'}
+                    onClick={handleBlockToggle}
+                    disabled={actionLoading === 'block'}
                     className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-gray-700 shadow-sm transition-colors hover:bg-gray-50 disabled:opacity-50"
                   >
                     <Ban size={16} />
-                    {blocked ? 'محظور' : 'حظر'}
+                    {blocked ? 'إلغاء الحظر' : 'حظر'}
                   </button>
                 </div>
               ) : (
