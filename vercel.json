@@ -1,3 +1,8 @@
 {
-  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+  "rewrites": [
+    {
+      "source": "/((?!google2865003cfebffc78\\.html$).*)",
+      "destination": "/index.html"
+    }
+  ]
 }
