@@ -20,28 +20,22 @@ import { signOut } from './services/authService';
 import { supabase } from './lib/supabase';
 import { requestBrowserNotifications, subscribeToMyNotifications, showBrowserNotification } from './services/notificationService';
 
-const isProfileComplete = (p) => {
+const isGoogleOAuthUser = (u) => {
+  if (!u) return false;
   return (
-    !!p &&
-    !!p.الاسم &&
-    !!p.العمر &&
-    !!p.المدينة &&
-    !!p.الحالة_الاجتماعية &&
-    !!p.المؤهل_الدراسي &&
-    !!p.الوظيفة &&
-    !!p.الطول &&
-    !!(p['لون البشرة'] || p.لون_البشرة) &&
-    !!p.قبلي_او_حضري &&
-    !!p.مستوى_التدين &&
-    !!p.إقرار_الزواج
+    u.app_metadata?.provider === 'google' ||
+    (Array.isArray(u.app_metadata?.providers) && u.app_metadata.providers.includes('google')) ||
+    (Array.isArray(u.identities) && u.identities.some((i) => i.provider === 'google'))
   );
 };
 
-function RequireCompleteProfile({ currentUser, profile, children }) {
+function RequireCompleteProfile({ currentUser, user, profile, children }) {
   if (!currentUser) {
     return <Navigate to="/login" replace />;
   }
-  if (!isProfileComplete(profile) && !profile?.is_admin) {
+  // Enforce mandatory profile setup specifically for NEW Google OAuth users without a linked profile
+  const isNewGoogleUser = isGoogleOAuthUser(user) && !profile;
+  if (isNewGoogleUser) {
     return <Navigate to="/profile/create" replace />;
   }
   return children;
@@ -155,10 +149,10 @@ export default function App() {
             path="/register"
             element={
               currentUser ? (
-                isProfileComplete(profile) ? (
-                  <Navigate to="/" replace />
-                ) : (
+                (isGoogleOAuthUser(user) && !profile) ? (
                   <Navigate to="/profile/create" replace />
+                ) : (
+                  <Navigate to="/" replace />
                 )
               ) : (
                 <RegisterPage
@@ -172,10 +166,10 @@ export default function App() {
             path="/login"
             element={
               currentUser ? (
-                isProfileComplete(profile) ? (
-                  <Navigate to="/" replace />
-                ) : (
+                (isGoogleOAuthUser(user) && !profile) ? (
                   <Navigate to="/profile/create" replace />
+                ) : (
+                  <Navigate to="/" replace />
                 )
               ) : (
                 <LoginPage setCurrentUser={setCurrentUser} />
@@ -201,7 +195,7 @@ export default function App() {
           <Route
             path="/profiles"
             element={
-              <RequireCompleteProfile currentUser={currentUser} profile={profile}>
+              <RequireCompleteProfile currentUser={currentUser} user={user} profile={profile}>
                 <ProfilesPage currentUser={currentUser} />
               </RequireCompleteProfile>
             }
@@ -209,7 +203,7 @@ export default function App() {
           <Route
             path="/profile/:id"
             element={
-              <RequireCompleteProfile currentUser={currentUser} profile={profile}>
+              <RequireCompleteProfile currentUser={currentUser} user={user} profile={profile}>
                 <ProfileDetailPage currentUser={currentUser} />
               </RequireCompleteProfile>
             }
@@ -217,7 +211,7 @@ export default function App() {
           <Route
             path="/messages"
             element={
-              <RequireCompleteProfile currentUser={currentUser} profile={profile}>
+              <RequireCompleteProfile currentUser={currentUser} user={user} profile={profile}>
                 <MessagesPage currentUser={currentUser} />
               </RequireCompleteProfile>
             }
@@ -225,7 +219,7 @@ export default function App() {
           <Route
             path="/profile-views"
             element={
-              <RequireCompleteProfile currentUser={currentUser} profile={profile}>
+              <RequireCompleteProfile currentUser={currentUser} user={user} profile={profile}>
                 <ProfileViewsPage currentUser={currentUser} />
               </RequireCompleteProfile>
             }
@@ -233,7 +227,7 @@ export default function App() {
           <Route
             path="/notifications"
             element={
-              <RequireCompleteProfile currentUser={currentUser} profile={profile}>
+              <RequireCompleteProfile currentUser={currentUser} user={user} profile={profile}>
                 <NotificationsPage currentUser={currentUser} />
               </RequireCompleteProfile>
             }

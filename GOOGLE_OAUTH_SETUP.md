@@ -39,7 +39,7 @@
    - Name: `Afaf Supabase OAuth`.
    - Authorized JavaScript origins:
      - `https://<YOUR_SUPABASE_PROJECT_REF>.supabase.co`
-     - `https://afaf-hadramout.vercel.app` (رابط Vercel Production)
+     - `https://afaf-hadramout-net.vercel.app` (رابط Vercel Production)
      - `http://localhost:5173`
    - Authorized redirect URIs:
      - `https://<YOUR_SUPABASE_PROJECT_REF>.supabase.co/auth/v1/callback`
@@ -55,10 +55,10 @@
    - **Client ID**: الصق الـ Client ID من Google Cloud Console.
    - **Client Secret**: الصق الـ Client Secret من Google Cloud Console.
 5. في **Authentication** > **URL Configuration**:
-   - **Site URL**: ضع رابط الموقع الأساسي (مثل `https://afaf-hadramout.vercel.app`).
+   - **Site URL**: ضع رابط الموقع الأساسي (`https://afaf-hadramout-net.vercel.app/`).
    - **Redirect URLs**: أضف روابط البيئات المسموح بها:
      - `http://localhost:5173/`
-     - `https://afaf-hadramout.vercel.app/`
+     - `https://afaf-hadramout-net.vercel.app/`
      - `https://*.app.github.dev/`
 
 ---
