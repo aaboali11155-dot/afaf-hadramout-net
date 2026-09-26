@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Save, User, AlertCircle, Pencil, ArrowRight } from 'lucide-react';
+import { Save, User, AlertCircle, Pencil, ArrowRight, CheckCircle2 } from 'lucide-react';
 import {
   cities,
   getSocialStatuses,
@@ -26,6 +26,12 @@ export default function ProfileFormPage({ currentUser }) {
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1);
   const [editing, setEditing] = useState(false);
+  const [selectedGender, setSelectedGender] = useState(
+    currentUser?.gender || localStorage.getItem('oauth_pending_gender') || 'male'
+  );
+  const [acceptedOath, setAcceptedOath] = useState(
+    localStorage.getItem('oauth_pending_oath') === 'true'
+  );
   const [formData, setFormData] = useState({
     name: '',
     age: '',
@@ -49,8 +55,24 @@ export default function ProfileFormPage({ currentUser }) {
     },
   });
   const [errors, setErrors] = useState({});
-  const socialOptions = getSocialStatuses(currentUser?.gender);
-  const partnerMaritalOptions = getMaritalPreferences(currentUser?.gender === 'male' ? 'female' : 'male');
+  const activeGender = existingProfile?.الجنس || existingProfile?.gender || selectedGender;
+  const socialOptions = getSocialStatuses(activeGender);
+  const partnerMaritalOptions = getMaritalPreferences(activeGender === 'male' ? 'female' : 'male');
+
+  const isGoogleUser = (u) => {
+    if (!u) return false;
+    return (
+      u.app_metadata?.provider === 'google' ||
+      (Array.isArray(u.app_metadata?.providers) && u.app_metadata.providers.includes('google')) ||
+      (Array.isArray(u.identities) && u.identities.some((i) => i.provider === 'google'))
+    );
+  };
+
+  const isNewGoogleProfile = !existingProfile && (
+    isGoogleUser(currentUser) ||
+    localStorage.getItem('oauth_pending_oath') !== null ||
+    localStorage.getItem('oauth_pending_gender') !== null
+  );
 
   useEffect(() => {
     if (!currentUser?.id) return;
@@ -58,6 +80,12 @@ export default function ProfileFormPage({ currentUser }) {
       const profile = await fetchMyProfile(currentUser.id);
       if (profile) {
         setExistingProfile(profile);
+        if (profile.الجنس || profile.gender) {
+          setSelectedGender(profile.الجنس || profile.gender);
+        }
+        if (profile.إقرار_الزواج) {
+          setAcceptedOath(true);
+        }
         setFormData({
           name: profile.الاسم || '',
           age: profile.العمر || '',
@@ -187,7 +215,7 @@ export default function ProfileFormPage({ currentUser }) {
       if (!formData.age || formData.age < 18 || formData.age > 80) newErrors.age = 'العمر يجب أن يكون بين 18 و80';
       if (!formData.city) newErrors.city = 'اختر المدينة';
       if (!formData.socialStatus) newErrors.socialStatus = 'اختر الحالة الاجتماعية';
-      if (currentUser?.gender === 'female' && formData.socialStatus === 'married') newErrors.socialStatus = 'لا يمكن للمتزوجة التسجيل كطالبة زواج';
+      if (activeGender === 'female' && formData.socialStatus === 'married') newErrors.socialStatus = 'لا يمكن للمتزوجة التسجيل كطالبة زواج';
       if (!formData.education) newErrors.education = 'اختر المؤهل الدراسي';
       if (!formData.occupation) newErrors.occupation = 'اختر الوظيفة';
     }
@@ -206,6 +234,9 @@ export default function ProfileFormPage({ currentUser }) {
         newErrors.minAge = 'العمر الأدنى يجب أن يكون أقل من الأقصى';
       }
       if (formData.partnerSpecs.cities.length === 0) newErrors.cities = 'اختر مدينة واحدة على الأقل';
+      if (isNewGoogleProfile && !acceptedOath) {
+        newErrors.oath = 'يجب الموافقة على الإقرار الشرعي للمتابعة';
+      }
     }
 
     setErrors(newErrors);
@@ -251,7 +282,8 @@ export default function ProfileFormPage({ currentUser }) {
     try {
       const profilePayload = {
         user_id: currentUser.id,
-        gender: currentUser.gender,
+        الجنس: activeGender,
+        gender: activeGender,
         الاسم: formData.name,
         العمر: Number(formData.age),
         المدينة: formData.city,
@@ -264,8 +296,13 @@ export default function ProfileFormPage({ currentUser }) {
         قبلي_او_حضري: formData.origin,
         مستوى_التدين: formData.religiousLevel,
         نبذة_عن_نفسه: formData.aboutMe,
+        إقرار_الزواج: true,
         account_status: existingProfile?.account_status || 'pending',
       };
+      try {
+        localStorage.removeItem('oauth_pending_gender');
+        localStorage.removeItem('oauth_pending_oath');
+      } catch (_) {}
 
       let profile;
       if (existingProfile?.id) {
@@ -275,7 +312,7 @@ export default function ProfileFormPage({ currentUser }) {
       }
 
       await savePartnerPreference(profile.id, {
-        preferred_gender: currentUser.gender === 'male' ? 'female' : 'male',
+        preferred_gender: activeGender === 'male' ? 'female' : 'male',
         min_age: Number(formData.partnerSpecs.minAge),
         max_age: Number(formData.partnerSpecs.maxAge),
         preferred_city: formData.partnerSpecs.cities[0] || '',
@@ -336,6 +373,36 @@ export default function ProfileFormPage({ currentUser }) {
 
         {step === 1 && (
           <div className="space-y-5">
+            {!existingProfile && (
+              <div>
+                <label className="mb-1.5 block text-sm font-semibold text-gray-700">القسم / الجنس</label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedGender('male')}
+                    className={`rounded-xl p-3 text-center text-sm font-semibold transition-all ${
+                      selectedGender === 'male'
+                        ? 'border-2 border-brand-500 bg-brand-50 text-brand-700'
+                        : 'border border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    قسم الشباب (ذكر)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedGender('female')}
+                    className={`rounded-xl p-3 text-center text-sm font-semibold transition-all ${
+                      selectedGender === 'female'
+                        ? 'border-2 border-rose-500 bg-rose-50 text-rose-700'
+                        : 'border border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    قسم البنات (أنثى)
+                  </button>
+                </div>
+              </div>
+            )}
+
             <div className="grid gap-5 sm:grid-cols-2">
               <div>
                 <label className="mb-1.5 block text-sm font-semibold text-gray-700">الاسم الكامل</label>
@@ -507,7 +574,7 @@ export default function ProfileFormPage({ currentUser }) {
           <div className="space-y-5">
             <div className="rounded-2xl bg-brand-50/60 p-4 text-center">
               <h2 className="text-lg font-bold text-gray-900">
-                {currentUser?.gender === 'male' ? 'مواصفات البنت التي أبحث عنها' : 'مواصفات الشاب الذي أبحث عنه'}
+                {activeGender === 'male' ? 'مواصفات البنت التي أبحث عنها' : 'مواصفات الشاب الذي أبحث عنه'}
               </h2>
               <p className="mt-1 text-sm text-gray-600">حدد مواصفات شريك الحياة الذي تبحث عنه</p>
             </div>
@@ -619,6 +686,49 @@ export default function ProfileFormPage({ currentUser }) {
                 </select>
               </div>
             </div>
+
+            {/* Oath Section for New Google OAuth Users */}
+            {isNewGoogleProfile && (
+              <div className={`rounded-2xl border-2 p-4 transition-colors ${acceptedOath ? 'border-brand-500 bg-brand-50/50' : 'border-gray-200 bg-gray-50'}`}>
+                <div className="mb-3 flex items-start gap-3">
+                  <div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-600 text-white">
+                    <span className="text-xs font-bold">ﷲ</span>
+                  </div>
+                  <p className="text-base font-bold leading-relaxed text-gray-900">
+                    أقسم بالله العلي العظيم أنني داخل هذا الموقع بنية الزواج الشرعي، وأن لا أستخدمه لأي غرض آخر،
+                    وأن أحافظ على آداب الإسلام والخلق في جميع تعاملاتي.
+                  </p>
+                </div>
+
+                <label className="flex cursor-pointer items-center gap-3 rounded-xl bg-white p-3 shadow-sm">
+                  <input
+                    type="checkbox"
+                    checked={acceptedOath}
+                    onChange={(e) => {
+                      setAcceptedOath(e.target.checked);
+                      setErrors((prev) => ({ ...prev, oath: undefined }));
+                    }}
+                    className="h-5 w-5 rounded border-gray-300 text-brand-600 focus:ring-brand-500"
+                  />
+                  <span className="text-sm font-semibold text-gray-800">
+                    أوافق على هذا الإقرار الشرعي والأخلاقي
+                  </span>
+                </label>
+
+                {errors.oath && (
+                  <p className="mt-2 flex items-center gap-1 text-xs text-red-600">
+                    <AlertCircle size={12} /> {errors.oath}
+                  </p>
+                )}
+
+                {acceptedOath && (
+                  <div className="mt-3 flex items-center gap-2 text-xs font-semibold text-brand-700">
+                    <CheckCircle2 size={14} />
+                    تم قبول الإقرار
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
 

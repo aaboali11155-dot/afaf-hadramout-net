@@ -33,6 +33,29 @@ export async function signUp({ email, password, gender, acceptedOath }) {
   return data;
 }
 
+export async function signInWithGoogle({ gender, acceptedOath } = {}) {
+  const origin = window.location.origin;
+  const baseUrl = (import.meta.env.BASE_URL || '/').replace(/\/+$/, '');
+  const redirectTo = `${origin}${baseUrl}/`;
+
+  if (gender) {
+    try { localStorage.setItem('oauth_pending_gender', gender); } catch (_) {}
+  }
+  if (acceptedOath) {
+    try { localStorage.setItem('oauth_pending_oath', 'true'); } catch (_) {}
+  }
+
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      redirectTo,
+    },
+  });
+
+  if (error) throw error;
+  return data;
+}
+
 export async function signIn({ email, password }) {
   const { data, error } = await supabase.auth.signInWithPassword({
     email,

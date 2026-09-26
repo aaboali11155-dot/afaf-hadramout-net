@@ -20,6 +20,35 @@ import { signOut } from './services/authService';
 import { supabase } from './lib/supabase';
 import { requestBrowserNotifications, subscribeToMyNotifications, showBrowserNotification } from './services/notificationService';
 
+const isGoogleOAuthUser = (u) => {
+  if (!u) return false;
+  return (
+    u.app_metadata?.provider === 'google' ||
+    (Array.isArray(u.app_metadata?.providers) && u.app_metadata.providers.includes('google')) ||
+    (Array.isArray(u.identities) && u.identities.some((i) => i.provider === 'google'))
+  );
+};
+
+function RequireCompleteProfile({ currentUser, user, profile, loading, children }) {
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-brand-600 border-t-transparent" />
+      </div>
+    );
+  }
+
+  if (!currentUser) {
+    return <Navigate to="/login" replace />;
+  }
+  // Enforce mandatory profile setup specifically for NEW Google OAuth users without a linked profile
+  const isNewGoogleUser = isGoogleOAuthUser(user) && !profile;
+  if (isNewGoogleUser) {
+    return <Navigate to="/profile/create" replace />;
+  }
+  return children;
+}
+
 export default function App() {
   const { user, loading: authLoading } = useSupabaseAuth();
   const { role, profile, loading: roleLoading } = useUserRole(user?.id);
@@ -127,15 +156,33 @@ export default function App() {
           <Route
             path="/register"
             element={
-              <RegisterPage
-                selectedSection={selectedSection}
-                setCurrentUser={setCurrentUser}
-              />
+              currentUser ? (
+                (isGoogleOAuthUser(user) && !profile) ? (
+                  <Navigate to="/profile/create" replace />
+                ) : (
+                  <Navigate to="/" replace />
+                )
+              ) : (
+                <RegisterPage
+                  selectedSection={selectedSection}
+                  setCurrentUser={setCurrentUser}
+                />
+              )
             }
           />
           <Route
             path="/login"
-            element={<LoginPage setCurrentUser={setCurrentUser} />}
+            element={
+              currentUser ? (
+                (isGoogleOAuthUser(user) && !profile) ? (
+                  <Navigate to="/profile/create" replace />
+                ) : (
+                  <Navigate to="/" replace />
+                )
+              ) : (
+                <LoginPage setCurrentUser={setCurrentUser} />
+              )
+            }
           />
           <Route
             path="/profile/create"
@@ -155,42 +202,42 @@ export default function App() {
           />
           <Route
             path="/profiles"
-            element={<ProfilesPage currentUser={currentUser} />}
+            element={
+              <RequireCompleteProfile currentUser={currentUser} user={user} profile={profile} loading={authLoading || roleLoading}>
+                <ProfilesPage currentUser={currentUser} />
+              </RequireCompleteProfile>
+            }
           />
           <Route
             path="/profile/:id"
             element={
-              <ProfileDetailPage
-                currentUser={currentUser}
-              />
+              <RequireCompleteProfile currentUser={currentUser} user={user} profile={profile} loading={authLoading || roleLoading}>
+                <ProfileDetailPage currentUser={currentUser} />
+              </RequireCompleteProfile>
             }
           />
           <Route
             path="/messages"
             element={
-              <MessagesPage
-                currentUser={currentUser}
-              />
+              <RequireCompleteProfile currentUser={currentUser} user={user} profile={profile} loading={authLoading || roleLoading}>
+                <MessagesPage currentUser={currentUser} />
+              </RequireCompleteProfile>
             }
           />
           <Route
             path="/profile-views"
             element={
-              currentUser ? (
+              <RequireCompleteProfile currentUser={currentUser} user={user} profile={profile} loading={authLoading || roleLoading}>
                 <ProfileViewsPage currentUser={currentUser} />
-              ) : (
-                <Navigate to="/login" replace />
-              )
+              </RequireCompleteProfile>
             }
           />
           <Route
             path="/notifications"
             element={
-              currentUser ? (
+              <RequireCompleteProfile currentUser={currentUser} user={user} profile={profile} loading={authLoading || roleLoading}>
                 <NotificationsPage currentUser={currentUser} />
-              ) : (
-                <Navigate to="/login" replace />
-              )
+              </RequireCompleteProfile>
             }
           />
           <Route
