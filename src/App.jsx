@@ -29,7 +29,15 @@ const isGoogleOAuthUser = (u) => {
   );
 };
 
-function RequireCompleteProfile({ currentUser, user, profile, children }) {
+function RequireCompleteProfile({ currentUser, user, profile, loading, children }) {
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-brand-600 border-t-transparent" />
+      </div>
+    );
+  }
+
   if (!currentUser) {
     return <Navigate to="/login" replace />;
   }
@@ -195,7 +203,7 @@ export default function App() {
           <Route
             path="/profiles"
             element={
-              <RequireCompleteProfile currentUser={currentUser} user={user} profile={profile}>
+              <RequireCompleteProfile currentUser={currentUser} user={user} profile={profile} loading={authLoading || roleLoading}>
                 <ProfilesPage currentUser={currentUser} />
               </RequireCompleteProfile>
             }
@@ -203,7 +211,7 @@ export default function App() {
           <Route
             path="/profile/:id"
             element={
-              <RequireCompleteProfile currentUser={currentUser} user={user} profile={profile}>
+              <RequireCompleteProfile currentUser={currentUser} user={user} profile={profile} loading={authLoading || roleLoading}>
                 <ProfileDetailPage currentUser={currentUser} />
               </RequireCompleteProfile>
             }
@@ -211,7 +219,7 @@ export default function App() {
           <Route
             path="/messages"
             element={
-              <RequireCompleteProfile currentUser={currentUser} user={user} profile={profile}>
+              <RequireCompleteProfile currentUser={currentUser} user={user} profile={profile} loading={authLoading || roleLoading}>
                 <MessagesPage currentUser={currentUser} />
               </RequireCompleteProfile>
             }
@@ -219,7 +227,7 @@ export default function App() {
           <Route
             path="/profile-views"
             element={
-              <RequireCompleteProfile currentUser={currentUser} user={user} profile={profile}>
+              <RequireCompleteProfile currentUser={currentUser} user={user} profile={profile} loading={authLoading || roleLoading}>
                 <ProfileViewsPage currentUser={currentUser} />
               </RequireCompleteProfile>
             }
@@ -227,7 +235,7 @@ export default function App() {
           <Route
             path="/notifications"
             element={
-              <RequireCompleteProfile currentUser={currentUser} user={user} profile={profile}>
+              <RequireCompleteProfile currentUser={currentUser} user={user} profile={profile} loading={authLoading || roleLoading}>
                 <NotificationsPage currentUser={currentUser} />
               </RequireCompleteProfile>
             }

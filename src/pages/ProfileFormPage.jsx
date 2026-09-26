@@ -59,6 +59,21 @@ export default function ProfileFormPage({ currentUser }) {
   const socialOptions = getSocialStatuses(activeGender);
   const partnerMaritalOptions = getMaritalPreferences(activeGender === 'male' ? 'female' : 'male');
 
+  const isGoogleUser = (u) => {
+    if (!u) return false;
+    return (
+      u.app_metadata?.provider === 'google' ||
+      (Array.isArray(u.app_metadata?.providers) && u.app_metadata.providers.includes('google')) ||
+      (Array.isArray(u.identities) && u.identities.some((i) => i.provider === 'google'))
+    );
+  };
+
+  const isNewGoogleProfile = !existingProfile && (
+    isGoogleUser(currentUser) ||
+    localStorage.getItem('oauth_pending_oath') !== null ||
+    localStorage.getItem('oauth_pending_gender') !== null
+  );
+
   useEffect(() => {
     if (!currentUser?.id) return;
     async function loadProfile() {
@@ -219,7 +234,7 @@ export default function ProfileFormPage({ currentUser }) {
         newErrors.minAge = 'العمر الأدنى يجب أن يكون أقل من الأقصى';
       }
       if (formData.partnerSpecs.cities.length === 0) newErrors.cities = 'اختر مدينة واحدة على الأقل';
-      if ((!existingProfile || !existingProfile.إقرار_الزواج) && !acceptedOath) {
+      if (isNewGoogleProfile && !acceptedOath) {
         newErrors.oath = 'يجب الموافقة على الإقرار الشرعي للمتابعة';
       }
     }
@@ -672,8 +687,8 @@ export default function ProfileFormPage({ currentUser }) {
               </div>
             </div>
 
-            {/* Oath Section */}
-            {(!existingProfile || !existingProfile.إقرار_الزواج) && (
+            {/* Oath Section for New Google OAuth Users */}
+            {isNewGoogleProfile && (
               <div className={`rounded-2xl border-2 p-4 transition-colors ${acceptedOath ? 'border-brand-500 bg-brand-50/50' : 'border-gray-200 bg-gray-50'}`}>
                 <div className="mb-3 flex items-start gap-3">
                   <div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-600 text-white">
