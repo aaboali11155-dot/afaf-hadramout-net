@@ -20,6 +20,33 @@ import { signOut } from './services/authService';
 import { supabase } from './lib/supabase';
 import { requestBrowserNotifications, subscribeToMyNotifications, showBrowserNotification } from './services/notificationService';
 
+const isProfileComplete = (p) => {
+  return (
+    !!p &&
+    !!p.الاسم &&
+    !!p.العمر &&
+    !!p.المدينة &&
+    !!p.الحالة_الاجتماعية &&
+    !!p.المؤهل_الدراسي &&
+    !!p.الوظيفة &&
+    !!p.الطول &&
+    !!(p['لون البشرة'] || p.لون_البشرة) &&
+    !!p.قبلي_او_حضري &&
+    !!p.مستوى_التدين &&
+    !!p.إقرار_الزواج
+  );
+};
+
+function RequireCompleteProfile({ currentUser, profile, children }) {
+  if (!currentUser) {
+    return <Navigate to="/login" replace />;
+  }
+  if (!isProfileComplete(profile) && !profile?.is_admin) {
+    return <Navigate to="/profile/create" replace />;
+  }
+  return children;
+}
+
 export default function App() {
   const { user, loading: authLoading } = useSupabaseAuth();
   const { role, profile, loading: roleLoading } = useUserRole(user?.id);
@@ -127,15 +154,33 @@ export default function App() {
           <Route
             path="/register"
             element={
-              <RegisterPage
-                selectedSection={selectedSection}
-                setCurrentUser={setCurrentUser}
-              />
+              currentUser ? (
+                isProfileComplete(profile) ? (
+                  <Navigate to="/" replace />
+                ) : (
+                  <Navigate to="/profile/create" replace />
+                )
+              ) : (
+                <RegisterPage
+                  selectedSection={selectedSection}
+                  setCurrentUser={setCurrentUser}
+                />
+              )
             }
           />
           <Route
             path="/login"
-            element={<LoginPage setCurrentUser={setCurrentUser} />}
+            element={
+              currentUser ? (
+                isProfileComplete(profile) ? (
+                  <Navigate to="/" replace />
+                ) : (
+                  <Navigate to="/profile/create" replace />
+                )
+              ) : (
+                <LoginPage setCurrentUser={setCurrentUser} />
+              )
+            }
           />
           <Route
             path="/profile/create"
@@ -155,42 +200,42 @@ export default function App() {
           />
           <Route
             path="/profiles"
-            element={<ProfilesPage currentUser={currentUser} />}
+            element={
+              <RequireCompleteProfile currentUser={currentUser} profile={profile}>
+                <ProfilesPage currentUser={currentUser} />
+              </RequireCompleteProfile>
+            }
           />
           <Route
             path="/profile/:id"
             element={
-              <ProfileDetailPage
-                currentUser={currentUser}
-              />
+              <RequireCompleteProfile currentUser={currentUser} profile={profile}>
+                <ProfileDetailPage currentUser={currentUser} />
+              </RequireCompleteProfile>
             }
           />
           <Route
             path="/messages"
             element={
-              <MessagesPage
-                currentUser={currentUser}
-              />
+              <RequireCompleteProfile currentUser={currentUser} profile={profile}>
+                <MessagesPage currentUser={currentUser} />
+              </RequireCompleteProfile>
             }
           />
           <Route
             path="/profile-views"
             element={
-              currentUser ? (
+              <RequireCompleteProfile currentUser={currentUser} profile={profile}>
                 <ProfileViewsPage currentUser={currentUser} />
-              ) : (
-                <Navigate to="/login" replace />
-              )
+              </RequireCompleteProfile>
             }
           />
           <Route
             path="/notifications"
             element={
-              currentUser ? (
+              <RequireCompleteProfile currentUser={currentUser} profile={profile}>
                 <NotificationsPage currentUser={currentUser} />
-              ) : (
-                <Navigate to="/login" replace />
-              )
+              </RequireCompleteProfile>
             }
           />
           <Route
