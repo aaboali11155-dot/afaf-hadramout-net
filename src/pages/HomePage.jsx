@@ -24,9 +24,30 @@ export default function HomePage({ currentUser }) {
             <span>منصة زواج خيري مجانية - نبدأ من حضرموت</span>
           </div>
 
-          <h1 className="mb-6 font-serif text-4xl font-bold leading-tight sm:text-5xl md:text-6xl">
+          <h1 className="mb-4 font-serif text-4xl font-bold leading-tight sm:text-5xl md:text-6xl">
             عفاف حضرموت نت
           </h1>
+
+          <p className="mb-6 text-base font-medium text-amber-300 sm:text-lg">
+            موقع تحت التجربة حاليًا
+          </p>
+
+          <div className="mb-8 overflow-hidden rounded-2xl bg-white/10 py-2.5 backdrop-blur-sm border border-white/10">
+            <div className="animate-marquee-rtl flex whitespace-nowrap text-sm sm:text-base font-medium text-brand-100">
+              <div className="flex shrink-0 items-center gap-6 px-3">
+                <span>عفاف حضرموت نت — منصة الزواج الخيري المجانية في حضرموت — الموقع تحت التجربة حاليًا — التسجيل مجاني 🤍</span>
+                <span>•</span>
+                <span>عفاف حضرموت نت — منصة الزواج الخيري المجانية في حضرموت — الموقع تحت التجربة حاليًا — التسجيل مجاني 🤍</span>
+                <span>•</span>
+              </div>
+              <div className="flex shrink-0 items-center gap-6 px-3">
+                <span>عفاف حضرموت نت — منصة الزواج الخيري المجانية في حضرموت — الموقع تحت التجربة حاليًا — التسجيل مجاني 🤍</span>
+                <span>•</span>
+                <span>عفاف حضرموت نت — منصة الزواج الخيري المجانية في حضرموت — الموقع تحت التجربة حاليًا — التسجيل مجاني 🤍</span>
+                <span>•</span>
+              </div>
+            </div>
+          </div>
 
           <p className="mb-8 text-lg leading-relaxed text-brand-100 sm:text-xl">
             منصة خيرية تهدف إلى تسهيل الزواج الشرعي بأمان وخصوصية، حيث نربط بين الراغبين في الزواج

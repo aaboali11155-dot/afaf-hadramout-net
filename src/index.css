@@ -186,3 +186,19 @@ input, select, textarea, button {
   .admin-users-mobile { display: block; }
   .admin-users-section { min-width: 0; }
 }
+
+/* Ticker marquee animation (RTL continuous right-to-left scroll) */
+@keyframes marquee-rtl {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee-rtl {
+  display: flex;
+  width: max-content;
+  animation: marquee-rtl 25s linear infinite;
+}
