@@ -6,7 +6,7 @@ import {
   getSocialStatuses,
   getMaritalPreferences,
   educationLevels,
-  occupations,
+  getOccupations,
   skinColors,
   origins,
   religiousLevels,
@@ -480,12 +480,12 @@ export default function ProfileFormPage({ currentUser }) {
               <div>
                 <label className="mb-1.5 block text-sm font-semibold text-gray-700">الوظيفة</label>
                 <select
-                  value={formData.occupation}
+                  value={getOccupationLabel(formData.occupation, activeGender)}
                   onChange={(e) => handleChange('occupation', e.target.value)}
                   className="select-field"
                 >
                   <option value="">اختر</option>
-                  {occupations.map((o) => (
+                  {getOccupations(activeGender).map((o) => (
                     <option key={o} value={o}>{o}</option>
                   ))}
                 </select>
@@ -660,13 +660,13 @@ export default function ProfileFormPage({ currentUser }) {
               <div>
                 <label className="mb-1.5 block text-sm font-semibold text-gray-700">الوظيفة المطلوبة</label>
                 <select
-                  value={formData.partnerSpecs.occupation}
+                  value={formData.partnerSpecs.occupation === 'any' ? 'any' : getOccupationLabel(formData.partnerSpecs.occupation, activeGender === 'male' ? 'female' : 'male')}
                   onChange={(e) => handlePartnerChange('occupation', e.target.value)}
                   className="select-field"
                 >
                   <option value="">اختر</option>
                   <option value="any">لا يهم</option>
-                  {occupations.map((o) => (
+                  {getOccupations(activeGender === 'male' ? 'female' : 'male').map((o) => (
                     <option key={o} value={o}>{o}</option>
                   ))}
                 </select>
