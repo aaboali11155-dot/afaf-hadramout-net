@@ -444,7 +444,14 @@ export default function AdminDashboardPage({ currentUser }) {
                         {profile.الاسم || 'مستخدم'}
                       </button>
                     </td>
-                    <td className="py-3 text-gray-600">{profile.الجنس === 'male' ? 'ذكر' : 'أنثى'}</td>
+                    <td className="py-3 text-gray-600">
+                      {(() => {
+                        const g = profile.الجنس || profile.gender;
+                        if (g === 'male' || g === 'ذكر') return 'ذكر';
+                        if (g === 'female' || g === 'أنثى') return 'أنثى';
+                        return 'غير محدد';
+                      })()}
+                    </td>
                     <td className="py-3 text-gray-600">{profile.المدينة}</td>
                     <td className="py-3">
                       {profile.account_status === 'active' && !profile.is_hidden ? (

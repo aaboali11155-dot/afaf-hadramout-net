@@ -132,7 +132,14 @@ export default function AdminProfileDetailPage({ currentUser }) {
           </div>
           <div>
             <h1 className="text-2xl font-bold text-gray-900">{profile.الاسم}</h1>
-            <p className="text-gray-500">{profile.الجنس === 'male' ? 'ذكر' : 'أنثى'} • {profile.المدينة}</p>
+            <p className="text-gray-500">
+              {(() => {
+                const g = profile.الجنس || profile.gender;
+                if (g === 'male' || g === 'ذكر') return 'ذكر';
+                if (g === 'female' || g === 'أنثى') return 'أنثى';
+                return 'غير محدد';
+              })()} • {profile.المدينة}
+            </p>
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -202,7 +209,14 @@ export default function AdminProfileDetailPage({ currentUser }) {
               </div>
               <div className={fieldClass}>
                 <p className={labelClass}>الجنس</p>
-                <p className={valueClass}>{profile.الجنس === 'male' ? 'ذكر' : 'أنثى'}</p>
+                <p className={valueClass}>
+                  {(() => {
+                    const g = profile.الجنس || profile.gender;
+                    if (g === 'male' || g === 'ذكر') return 'ذكر';
+                    if (g === 'female' || g === 'أنثى') return 'أنثى';
+                    return 'غير محدد';
+                  })()}
+                </p>
               </div>
               <div className={fieldClass}>
                 <p className={labelClass}>المدينة</p>
@@ -295,7 +309,14 @@ export default function AdminProfileDetailPage({ currentUser }) {
             <div className="space-y-3">
               <div className={fieldClass}>
                 <p className={labelClass}>الجنس المفضل</p>
-                <p className={valueClass}>{profile.partner_preferences?.preferred_gender === 'male' ? 'ذكر' : 'أنثى'}</p>
+                <p className={valueClass}>
+                  {(() => {
+                    const pg = profile.partner_preferences?.preferred_gender;
+                    if (pg === 'male' || pg === 'ذكر') return 'ذكر';
+                    if (pg === 'female' || pg === 'أنثى') return 'أنثى';
+                    return 'غير محدد';
+                  })()}
+                </p>
               </div>
               <div className={fieldClass}>
                 <p className={labelClass}>العمر</p>
