@@ -98,12 +98,37 @@ export async function fetchMyProfile(userId) {
 }
 
 export async function fetchAllProfiles() {
-  const { data, error } = await supabase
+  const { data: profiles, error } = await supabase
     .from('profiles')
     .select('*')
     .order('created_at', { ascending: false });
   if (error) throw error;
-  return data || [];
+  if (!profiles || profiles.length === 0) return [];
+
+  const userIds = [...new Set(profiles.map((p) => p.user_id).filter(Boolean))];
+  if (userIds.length === 0) return profiles;
+
+  let emailMap = new Map();
+  try {
+    const { data: users, error: usersError } = await supabase
+      .from('users')
+      .select('id, email')
+      .in('id', userIds);
+    if (!usersError && users) {
+      users.forEach((u) => {
+        if (u.id && u.email) {
+          emailMap.set(u.id, u.email);
+        }
+      });
+    }
+  } catch (err) {
+    console.error('Error fetching users email:', err);
+  }
+
+  return profiles.map((p) => ({
+    ...p,
+    email: emailMap.get(p.user_id) || p.email || null,
+  }));
 }
 
 export async function createProfile(profile) {
