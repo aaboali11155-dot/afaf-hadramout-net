@@ -25,6 +25,7 @@ import { makeAdmin, revokeAdmin, getAdminPermissionState, ADMIN_PERMISSIONS } fr
 import { fetchAllUserBlocks, unblockUser } from '../services/adminBlockService';
 import { fetchAllMessages, updateMessageStatus } from '../services/messageService';
 import { fetchAdminAuditLog, logAdminAction } from '../services/adminAuditService';
+import { getGenderLabel } from '../data/mockData';
 import { supabase } from '../lib/supabase';
 
 export default function AdminDashboardPage({ currentUser }) {
@@ -445,12 +446,7 @@ export default function AdminDashboardPage({ currentUser }) {
                       </button>
                     </td>
                     <td className="py-3 text-gray-600">
-                      {(() => {
-                        const g = profile.الجنس || profile.gender;
-                        if (g === 'male' || g === 'ذكر') return 'ذكر';
-                        if (g === 'female' || g === 'أنثى') return 'أنثى';
-                        return 'غير محدد';
-                      })()}
+                      {getGenderLabel(profile.الجنس || profile.gender)}
                     </td>
                     <td className="py-3 text-gray-600">{profile.المدينة}</td>
                     <td className="py-3">

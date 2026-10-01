@@ -8,6 +8,8 @@ import {
   getOriginLabel,
   getReligiousLabel,
   getOccupationLabel,
+  getGenderLabelText,
+  normalizeGender,
 } from '../data/mockData';
 import { fetchProfileById, recordProfileView } from '../services/profileService';
 import { fetchMyContactRequests, sendContactRequest } from '../services/contactRequestService';
@@ -186,7 +188,7 @@ export default function ProfileDetailPage({ currentUser }) {
         <div className="mb-6 flex flex-col items-center gap-4 border-b border-gray-100 pb-6 text-center sm:flex-row sm:text-right">
           <div
             className={`flex h-24 w-24 shrink-0 items-center justify-center rounded-3xl text-3xl font-bold text-white ${
-              profile.الجنس === 'male' ? 'bg-blue-500' : 'bg-rose-500'
+              normalizeGender(profile.الجنس || profile.gender) === 'male' ? 'bg-blue-500' : 'bg-rose-500'
             }`}
           >
             {getInitials(profile.الاسم || '')}
@@ -218,11 +220,7 @@ export default function ProfileDetailPage({ currentUser }) {
               <li className="flex justify-between border-b border-gray-200 pb-2">
                 <span className="text-gray-500">النوع</span>
                 <span className="font-semibold text-gray-900">
-                  {profile.الجنس === 'male' || profile.الجنس === 'ذكر' || profile.gender === 'male' || profile.gender === 'ذكر'
-                    ? 'شاب'
-                    : profile.الجنس === 'female' || profile.الجنس === 'أنثى' || profile.gender === 'female' || profile.gender === 'أنثى'
-                    ? 'بنت'
-                    : 'غير محدد'}
+                  {getGenderLabelText(profile.الجنس || profile.gender)}
                 </span>
               </li>
               <li className="flex justify-between border-b border-gray-200 pb-2">

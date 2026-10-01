@@ -27,6 +27,57 @@ export const cities = [
   'منطقة أخرى',
 ];
 
+export const normalizeGender = (g) => {
+  if (!g || typeof g !== 'string') return '';
+  const str = g.trim().toLowerCase();
+  if (
+    str === 'male' ||
+    str === 'm' ||
+    str === 'ذكر' ||
+    str === 'شاب' ||
+    str === 'رجل'
+  ) {
+    return 'male';
+  }
+  if (
+    str === 'female' ||
+    str === 'f' ||
+    str === 'أنثى' ||
+    str === 'انثى' ||
+    str === 'أنثي' ||
+    str === 'انثي' ||
+    str === 'بنت' ||
+    str === 'امرأة'
+  ) {
+    return 'female';
+  }
+  return '';
+};
+
+export const getGenderLabel = (g) => {
+  const norm = normalizeGender(g);
+  if (norm === 'male') return 'ذكر';
+  if (norm === 'female') return 'أنثى';
+  return 'غير محدد';
+};
+
+export const getGenderLabelText = (g) => {
+  const norm = normalizeGender(g);
+  if (norm === 'male') return 'شاب';
+  if (norm === 'female') return 'بنت';
+  return 'غير محدد';
+};
+
+export const normalizeSocialStatus = (status) => {
+  if (!status || typeof status !== 'string') return '';
+  const s = status.trim().toLowerCase();
+  if (s === 'single' || s === 'أعزب' || s === 'عزباء') return 'single';
+  if (s === 'married' || s === 'متزوج' || s === 'متزوجة') return 'married';
+  if (s === 'divorced' || s === 'مطلق' || s === 'مطلقة') return 'divorced';
+  if (s === 'widowed' || s === 'أرمل' || s === 'أرملة') return 'widowed';
+  return s;
+};
+
 export const socialStatuses = [
   { value: 'single', label: 'أعزب' },
   { value: 'married', label: 'متزوج' },
@@ -34,7 +85,7 @@ export const socialStatuses = [
   { value: 'widowed', label: 'أرمل' },
 ];
 
-export const getSocialStatuses = (gender) => gender === 'female'
+export const getSocialStatuses = (gender) => normalizeGender(gender) === 'female'
   ? [
       { value: 'single', label: 'عزباء' },
       { value: 'married', label: 'متزوجة' },
@@ -43,7 +94,7 @@ export const getSocialStatuses = (gender) => gender === 'female'
     ]
   : socialStatuses;
 
-export const getMaritalPreferences = (gender) => gender === 'female'
+export const getMaritalPreferences = (gender) => normalizeGender(gender) === 'female'
   ? [
       { value: 'single', label: 'عزباء' },
       { value: 'divorced', label: 'مطلقة' },
@@ -68,7 +119,7 @@ export const educationLevels = [
 ];
 
 export const getOccupations = (gender = 'male') => {
-  const isFemale = gender === 'female' || gender === 'أنثى';
+  const isFemale = normalizeGender(gender) === 'female';
   if (isFemale) {
     return [
       'طبيبة',
@@ -321,7 +372,7 @@ export const getReligiousLabel = (value) => getLabel(religiousLevels, value);
 
 export const getOccupationLabel = (value, gender = 'male') => {
   if (!value) return '';
-  const isFemale = gender === 'female' || gender === 'أنثى';
+  const isFemale = normalizeGender(gender) === 'female';
 
   const exactMap = isFemale
     ? {

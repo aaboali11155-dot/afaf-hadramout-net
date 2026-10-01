@@ -16,6 +16,7 @@ import AdminProfileDetailPage from './pages/AdminProfileDetailPage';
 import EmailConfirmedPage from './pages/EmailConfirmedPage';
 import useSupabaseAuth from './hooks/useSupabaseAuth';
 import useUserRole from './hooks/useUserRole';
+import { normalizeGender } from './data/mockData';
 import { signOut } from './services/authService';
 import { supabase } from './lib/supabase';
 import { requestBrowserNotifications, subscribeToMyNotifications, showBrowserNotification } from './services/notificationService';
@@ -121,7 +122,7 @@ export default function App() {
     setCurrentUser({
       id: user.id,
       email: user.email,
-      gender: profile?.الجنس || profile?.gender || user.user_metadata?.gender || selectedSection || 'male',
+      gender: normalizeGender(profile?.الجنس || profile?.gender || user.user_metadata?.gender || selectedSection) || 'male',
       role: profile?.is_admin ? 'admin' : 'user',
       isAdmin: !!profile?.is_admin,
       adminRole: profile?.admin_role || null,
