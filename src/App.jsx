@@ -121,7 +121,7 @@ export default function App() {
     setCurrentUser({
       id: user.id,
       email: user.email,
-      gender: profile?.الجنس || user.user_metadata?.gender || selectedSection || 'male',
+      gender: profile?.الجنس || profile?.gender || user.user_metadata?.gender || selectedSection || 'male',
       role: profile?.is_admin ? 'admin' : 'user',
       isAdmin: !!profile?.is_admin,
       adminRole: profile?.admin_role || null,
