@@ -12,13 +12,28 @@ import {
 import { fetchApprovedProfiles } from '../services/profileService';
 import { fetchBlockedUserIds } from '../services/userBlockService';
 
+const getGenderLabelText = (gender) => {
+  if (gender === 'male' || gender === 'ذكر') return 'شاب';
+  if (gender === 'female' || gender === 'أنثى') return 'بنت';
+  return 'غير محدد';
+};
+
 export default function ProfilesPage({ currentUser }) {
   const [profiles, setProfiles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [blockedIds, setBlockedIds] = useState([]);
+
+  const currentUserGender = currentUser?.الجنس || currentUser?.gender;
+  const targetGender =
+    currentUserGender === 'male' || currentUserGender === 'ذكر'
+      ? 'female'
+      : currentUserGender === 'female' || currentUserGender === 'أنثى'
+      ? 'male'
+      : '';
+
   const [filters, setFilters] = useState({
-    gender: currentUser?.gender === 'male' ? 'female' : currentUser?.gender === 'female' ? 'male' : '',
+    gender: targetGender,
     city: '',
     minAge: '',
     maxAge: '',
@@ -27,12 +42,13 @@ export default function ProfilesPage({ currentUser }) {
     search: '',
   });
   const [showFilters, setShowFilters] = useState(false);
-  const targetGender = currentUser?.gender === 'male' ? 'female' : currentUser?.gender === 'female' ? 'male' : '';
   const socialOptions = getSocialStatuses(targetGender);
 
   useEffect(() => {
-    if (currentUser?.gender) setFilters((prev) => ({ ...prev, gender: targetGender }));
-  }, [currentUser?.gender]);
+    if (targetGender) {
+      setFilters((prev) => ({ ...prev, gender: targetGender }));
+    }
+  }, [targetGender]);
 
   useEffect(() => {
     async function loadProfiles() {
@@ -56,7 +72,14 @@ export default function ProfilesPage({ currentUser }) {
   const filteredProfiles = useMemo(() => {
     return profiles.filter((profile) => {
       const profileGender = profile.الجنس || profile.gender;
-      const matchGender = filters.gender ? profileGender === filters.gender : true;
+      const normalizedGender =
+        profileGender === 'male' || profileGender === 'ذكر'
+          ? 'male'
+          : profileGender === 'female' || profileGender === 'أنثى'
+          ? 'female'
+          : profileGender;
+
+      const matchGender = filters.gender ? normalizedGender === filters.gender : true;
       const matchCity = filters.city ? profile.المدينة === filters.city : true;
       const matchMinAge = filters.minAge ? profile.العمر >= Number(filters.minAge) : true;
       const matchMaxAge = filters.maxAge ? profile.العمر <= Number(filters.maxAge) : true;
@@ -68,7 +91,7 @@ export default function ProfilesPage({ currentUser }) {
         : true;
       const notBlocked = !blockedIds.includes(profile.user_id);
       const notOwn = profile.user_id !== currentUser?.id;
-      const eligible = !(profileGender === 'female' && profile.الحالة_الاجتماعية === 'married');
+      const eligible = !(normalizedGender === 'female' && profile.الحالة_الاجتماعية === 'married');
 
       return notOwn && eligible && matchGender && matchCity && matchMinAge && matchMaxAge && matchSocial && matchEducation && matchSearch && notBlocked;
     });
@@ -84,7 +107,7 @@ export default function ProfilesPage({ currentUser }) {
 
   const handleReset = () => {
     setFilters({
-      gender: currentUser?.gender === 'male' ? 'female' : currentUser?.gender === 'female' ? 'male' : '',
+      gender: targetGender,
       city: '',
       minAge: '',
       maxAge: '',
@@ -229,58 +252,79 @@ export default function ProfilesPage({ currentUser }) {
         </div>
       ) : (
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {filteredProfiles.map((profile) => (
-            <div
-              key={profile.id}
-              className="card flex flex-col transition-all hover:-translate-y-1 hover:shadow-lift"
-            >
-              <div className="mb-4 flex items-center gap-4">
-                <div className={`flex h-16 w-16 items-center justify-center rounded-2xl text-xl font-bold text-white ${
-                  profile.الجنس === 'male' ? 'bg-blue-500' : 'bg-rose-500'
-                }`}>
-                  {getInitials(profile.الاسم || '')}
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-gray-900">{profile.الاسم}</h3>
-                  <div className="flex items-center gap-1 text-sm text-gray-500">
-                    <MapPin size={14} />
-                    {profile.المدينة}
+          {filteredProfiles.map((profile) => {
+            const profileGender = profile.الجنس || profile.gender;
+            const normalizedGender =
+              profileGender === 'male' || profileGender === 'ذكر'
+                ? 'male'
+                : profileGender === 'female' || profileGender === 'أنثى'
+                ? 'female'
+                : null;
+
+            const avatarBg =
+              normalizedGender === 'male'
+                ? 'bg-blue-500'
+                : normalizedGender === 'female'
+                ? 'bg-rose-500'
+                : 'bg-gray-500';
+
+            return (
+              <div
+                key={profile.id}
+                className="card flex flex-col transition-all hover:-translate-y-1 hover:shadow-lift"
+              >
+                <div className="mb-4 flex items-center gap-4">
+                  <div
+                    className={`flex h-16 w-16 items-center justify-center rounded-2xl text-xl font-bold text-white ${avatarBg}`}
+                  >
+                    {getInitials(profile.الاسم || '')}
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-gray-900">{profile.الاسم}</h3>
+                    <div className="flex items-center gap-1 text-sm text-gray-500">
+                      <MapPin size={14} />
+                      {profile.المدينة}
+                    </div>
                   </div>
                 </div>
+
+                <div className="mb-4 grid grid-cols-2 gap-2 text-sm">
+                  <div className="rounded-xl bg-gray-50 px-3 py-2">
+                    <span className="block text-xs text-gray-500">الجنس</span>
+                    <span className="font-semibold text-gray-900">{getGenderLabelText(profileGender)}</span>
+                  </div>
+                  <div className="rounded-xl bg-gray-50 px-3 py-2">
+                    <span className="block text-xs text-gray-500">العمر</span>
+                    <span className="font-semibold text-gray-900">{profile.العمر ? `${profile.العمر} سنة` : 'غير محدد'}</span>
+                  </div>
+                  <div className="rounded-xl bg-gray-50 px-3 py-2">
+                    <span className="block text-xs text-gray-500">الحالة</span>
+                    <span className="font-semibold text-gray-900">{getSocialLabel(profile.الحالة_الاجتماعية, profileGender)}</span>
+                  </div>
+                  <div className="rounded-xl bg-gray-50 px-3 py-2">
+                    <span className="block text-xs text-gray-500">المؤهل</span>
+                    <span className="font-semibold text-gray-900">{getEducationLabel(profile.المؤهل_الدراسي)}</span>
+                  </div>
+                  <div className="col-span-2 rounded-xl bg-gray-50 px-3 py-2">
+                    <span className="block text-xs text-gray-500">التدين</span>
+                    <span className="font-semibold text-gray-900">{getReligiousLabel(profile.مستوى_التدين)}</span>
+                  </div>
+                </div>
+
+                <p className="mb-5 line-clamp-2 flex-1 text-sm leading-relaxed text-gray-600">
+                  {profile.نبذة_عن_نفسه}
+                </p>
+
+                <Link
+                  to={`/profile/${profile.id}`}
+                  className="btn-secondary w-full"
+                >
+                  <Eye size={18} />
+                  عرض الملف
+                </Link>
               </div>
-
-              <div className="mb-4 grid grid-cols-2 gap-2 text-sm">
-                <div className="rounded-xl bg-gray-50 px-3 py-2">
-                  <span className="block text-xs text-gray-500">العمر</span>
-                  <span className="font-semibold text-gray-900">{profile.العمر} سنة</span>
-                </div>
-                <div className="rounded-xl bg-gray-50 px-3 py-2">
-                  <span className="block text-xs text-gray-500">الحالة</span>
-                  <span className="font-semibold text-gray-900">{getSocialLabel(profile.الحالة_الاجتماعية, profile.الجنس || profile.gender)}</span>
-                </div>
-                <div className="rounded-xl bg-gray-50 px-3 py-2">
-                  <span className="block text-xs text-gray-500">المؤهل</span>
-                  <span className="font-semibold text-gray-900">{getEducationLabel(profile.المؤهل_الدراسي)}</span>
-                </div>
-                <div className="rounded-xl bg-gray-50 px-3 py-2">
-                  <span className="block text-xs text-gray-500">التدين</span>
-                  <span className="font-semibold text-gray-900">{getReligiousLabel(profile.مستوى_التدين)}</span>
-                </div>
-              </div>
-
-              <p className="mb-5 line-clamp-2 flex-1 text-sm leading-relaxed text-gray-600">
-                {profile.نبذة_عن_نفسه}
-              </p>
-
-              <Link
-                to={`/profile/${profile.id}`}
-                className="btn-secondary w-full"
-              >
-                <Eye size={18} />
-                عرض الملف
-              </Link>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>
