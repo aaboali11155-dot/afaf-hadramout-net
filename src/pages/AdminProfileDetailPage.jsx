@@ -21,6 +21,7 @@ import {
   getOriginLabel,
   getReligiousLabel,
   getOccupationLabel,
+  getGenderLabel,
 } from '../data/mockData';
 
 export default function AdminProfileDetailPage({ currentUser }) {
@@ -133,12 +134,7 @@ export default function AdminProfileDetailPage({ currentUser }) {
           <div>
             <h1 className="text-2xl font-bold text-gray-900">{profile.الاسم}</h1>
             <p className="text-gray-500">
-              {(() => {
-                const g = profile.الجنس || profile.gender;
-                if (g === 'male' || g === 'ذكر') return 'ذكر';
-                if (g === 'female' || g === 'أنثى') return 'أنثى';
-                return 'غير محدد';
-              })()} • {profile.المدينة}
+              {getGenderLabel(profile.الجنس || profile.gender)} • {profile.المدينة}
             </p>
           </div>
         </div>
@@ -210,12 +206,7 @@ export default function AdminProfileDetailPage({ currentUser }) {
               <div className={fieldClass}>
                 <p className={labelClass}>الجنس</p>
                 <p className={valueClass}>
-                  {(() => {
-                    const g = profile.الجنس || profile.gender;
-                    if (g === 'male' || g === 'ذكر') return 'ذكر';
-                    if (g === 'female' || g === 'أنثى') return 'أنثى';
-                    return 'غير محدد';
-                  })()}
+                  {getGenderLabel(profile.الجنس || profile.gender)}
                 </p>
               </div>
               <div className={fieldClass}>
@@ -310,12 +301,7 @@ export default function AdminProfileDetailPage({ currentUser }) {
               <div className={fieldClass}>
                 <p className={labelClass}>الجنس المفضل</p>
                 <p className={valueClass}>
-                  {(() => {
-                    const pg = profile.partner_preferences?.preferred_gender;
-                    if (pg === 'male' || pg === 'ذكر') return 'ذكر';
-                    if (pg === 'female' || pg === 'أنثى') return 'أنثى';
-                    return 'غير محدد';
-                  })()}
+                  {getGenderLabel(profile.partner_preferences?.preferred_gender)}
                 </p>
               </div>
               <div className={fieldClass}>

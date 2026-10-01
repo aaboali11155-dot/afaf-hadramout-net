@@ -8,15 +8,12 @@ import {
   getEducationLabel,
   getSocialLabel,
   getReligiousLabel,
+  getGenderLabelText,
+  normalizeGender,
+  normalizeSocialStatus,
 } from '../data/mockData';
 import { fetchApprovedProfiles } from '../services/profileService';
 import { fetchBlockedUserIds } from '../services/userBlockService';
-
-const getGenderLabelText = (gender) => {
-  if (gender === 'male' || gender === 'ذكر') return 'شاب';
-  if (gender === 'female' || gender === 'أنثى') return 'بنت';
-  return 'غير محدد';
-};
 
 export default function ProfilesPage({ currentUser }) {
   const [profiles, setProfiles] = useState([]);
@@ -24,11 +21,11 @@ export default function ProfilesPage({ currentUser }) {
   const [error, setError] = useState('');
   const [blockedIds, setBlockedIds] = useState([]);
 
-  const currentUserGender = currentUser?.الجنس || currentUser?.gender;
+  const currentUserGender = normalizeGender(currentUser?.gender || currentUser?.الجنس);
   const targetGender =
-    currentUserGender === 'male' || currentUserGender === 'ذكر'
+    currentUserGender === 'male'
       ? 'female'
-      : currentUserGender === 'female' || currentUserGender === 'أنثى'
+      : currentUserGender === 'female'
       ? 'male'
       : '';
 
@@ -71,19 +68,16 @@ export default function ProfilesPage({ currentUser }) {
 
   const filteredProfiles = useMemo(() => {
     return profiles.filter((profile) => {
-      const profileGender = profile.الجنس || profile.gender;
-      const normalizedGender =
-        profileGender === 'male' || profileGender === 'ذكر'
-          ? 'male'
-          : profileGender === 'female' || profileGender === 'أنثى'
-          ? 'female'
-          : profileGender;
+      const profileGender = normalizeGender(profile.الجنس || profile.gender);
+      const filterGender = normalizeGender(filters.gender);
 
-      const matchGender = filters.gender ? normalizedGender === filters.gender : true;
+      const matchGender = filterGender ? profileGender === filterGender : true;
       const matchCity = filters.city ? profile.المدينة === filters.city : true;
       const matchMinAge = filters.minAge ? profile.العمر >= Number(filters.minAge) : true;
       const matchMaxAge = filters.maxAge ? profile.العمر <= Number(filters.maxAge) : true;
-      const matchSocial = filters.socialStatus ? profile.الحالة_الاجتماعية === filters.socialStatus : true;
+      const matchSocial = filters.socialStatus
+        ? normalizeSocialStatus(profile.الحالة_الاجتماعية) === normalizeSocialStatus(filters.socialStatus)
+        : true;
       const matchEducation = filters.education ? profile.المؤهل_الدراسي === filters.education : true;
       const matchSearch = filters.search
         ? (profile.الاسم || '').toLowerCase().includes(filters.search.toLowerCase()) ||
@@ -91,7 +85,8 @@ export default function ProfilesPage({ currentUser }) {
         : true;
       const notBlocked = !blockedIds.includes(profile.user_id);
       const notOwn = profile.user_id !== currentUser?.id;
-      const eligible = !(normalizedGender === 'female' && profile.الحالة_الاجتماعية === 'married');
+      const isMarried = normalizeSocialStatus(profile.الحالة_الاجتماعية) === 'married';
+      const eligible = !(profileGender === 'female' && isMarried);
 
       return notOwn && eligible && matchGender && matchCity && matchMinAge && matchMaxAge && matchSocial && matchEducation && matchSearch && notBlocked;
     });
@@ -253,18 +248,12 @@ export default function ProfilesPage({ currentUser }) {
       ) : (
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {filteredProfiles.map((profile) => {
-            const profileGender = profile.الجنس || profile.gender;
-            const normalizedGender =
-              profileGender === 'male' || profileGender === 'ذكر'
-                ? 'male'
-                : profileGender === 'female' || profileGender === 'أنثى'
-                ? 'female'
-                : null;
+            const profileGender = normalizeGender(profile.الجنس || profile.gender);
 
             const avatarBg =
-              normalizedGender === 'male'
+              profileGender === 'male'
                 ? 'bg-blue-500'
-                : normalizedGender === 'female'
+                : profileGender === 'female'
                 ? 'bg-rose-500'
                 : 'bg-gray-500';
 
